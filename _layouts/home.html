@@ -1,0 +1,14 @@
+---
+layout: default
+---
+
+<div class="home">
+    {%- if page.title -%}
+    <h1 class="page-heading">{{ page.title }}</h1>
+    {%- endif -%}
+
+    <div class="container">
+        <img src="{{page.display_pic}}" alt="picture of me">
+        <p class="bio">"{{ page.bio | smartify }}"</p>
+    </div>
+</div>

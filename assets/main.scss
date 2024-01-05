@@ -1,15 +1,22 @@
 ---
 ---
+// Mandatory
+@import "bootstrap/functions";
+@import "bootstrap/variables";
+@import "bootstrap/mixins";
+// // Optional
+@import "bootstrap/bootstrap-grid";
+
 @import "minima";
 
-.container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding-bottom: 50px;
-}
+// .container {
+//   display: flex;
+//   align-items: center;
+//   justify-content: center;
+//   padding-bottom: 50px;
+// }
 
-img {
+.display-pic {
   border-radius: 8px;
   height: auto;
   width: 300px;
@@ -19,14 +26,32 @@ img {
 }
 
 .bio {
-  padding-left: 50px;
-  // font-size: 20px;
   // font-family: "Utopia-italic";
-  // text-align: center;
   font-family: adobe-garamond-pro, serif;
   font-size: 20px;
   font-style: italic;
   font-weight: normal;
   letter-spacing: normal;
   color: dimgray;
+  text-align: center;
+}
+
+ul.icon-list {
+  margin: 0;
+  font-size: 1.1em;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  list-style: none;
+}
+
+ul.icon-list li {
+  display: flex;
+  align-items: center;
+  margin: 0 .5em;
+}
+
+.icon {
+  height: 3em;
+  margin-right: .2em;
 }

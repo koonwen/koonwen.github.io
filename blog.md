@@ -5,3 +5,5 @@ permalink: /blog
 ---
 
 # My tech related articles
+
+Nothing to see here... yet

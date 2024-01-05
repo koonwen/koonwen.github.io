@@ -1,0 +1,65 @@
+# /_data/icon_list.yml
+
+bash:
+  icon: bash/bash-original.svg
+  label: ""
+bootstrap:
+  icon: bootstrap/bootstrap-original.svg
+  label: ""
+c:
+  icon: c/c-original.svg
+  label: ""
+css:
+  icon: css3/css3-original.svg
+  label: ""
+html:
+  icon: html5/html5-original.svg
+  label: ""
+debian:
+  icon: debian/debian-original.svg
+  label: ""
+docker:
+  icon: docker/docker-original.svg
+  label: ""
+flask:
+  icon: flask/flask-original.svg
+  label: ""
+git:
+  icon: git/git-original.svg
+  label: ""
+github:
+  icon: github/github-original.svg
+  label: ""
+go:
+  icon: go/go-original.svg
+  label: ""
+haskell:
+  icon: haskell/haskell-original.svg
+  label: ""
+latex:
+  icon: latex/latex-original.svg
+  label: ""
+ocaml:
+  icon: ocaml/ocaml-original.svg
+  label: ""
+python:
+  icon: python/python-original.svg
+  label: ""
+raspberrypi:
+  icon: raspberrypi/raspberrypi-original.svg
+  label: ""
+rust:
+  icon: rust/rust-plain.svg
+  label: ""
+scala:
+  icon: scala/scala-original.svg
+  label: ""
+slack:
+  icon: slack/slack-original.svg
+  label: ""
+sqlite:
+  icon: sqlite/sqlite-original.svg
+  label: ""
+tensorflow:
+  icon: tensorflow/tensorflow-original.svg
+  label: ""

@@ -1,14 +1,19 @@
 ---
 layout: default
+github-readme-stats-server: https://github.com/anuraghazra/github-readme-stats
 ---
 
-<div class="home">
-    {%- if page.title -%}
-    <h1 class="page-heading">{{ page.title }}</h1>
-    {%- endif -%}
+<div class="container text-center">
 
-    <div class="container">
-        <img src="{{page.display_pic}}" alt="picture of me">
-        <p class="bio">"{{ page.bio | smartify }}"</p>
+    <div class="row row-cols-2 mb-5">
+        <div class="col">
+            <img class="display-pic" src="{{page.display_pic}}" alt="picture of me">
+        </div>
+        <div class="col my-auto">
+            <p class="bio">"{{ page.bio | smartify }}"</p>
+        </div>
     </div>
+
+    {{content}}
+
 </div>

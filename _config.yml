@@ -22,7 +22,7 @@ title: "Koonwen (core dumped)"
 author: Koon Wen Lee
 email: koonwen@gmail.com
 description: > # this means to ignore newlines until "twitter_username:"
-  My portfolio and blog page
+  Portfolio and Blog
 
 # social links
 twitter_username: koonwen
@@ -64,6 +64,12 @@ theme: minima
 plugins:
  - jekyll-feed
  - jekyll-seo-tag
+ - jekyll-email-protect
+ - jekyll-pdf-embed
+ - jekyll-icon-list
+ - jekyll-compose
+ - jekyll-seo-tag
+ - jekyll-inline-svg
 
 defaults:
   -
@@ -77,3 +83,13 @@ defaults:
       path: "assets/cv"
     values:
       pdfs: true
+
+icon_list:
+  default_path: /_data/icons/
+  defaults:
+    ul: class="icon-list"
+    li: class="icon-list-item"
+    svg: overflow="visible" class="icon"
+
+svg:
+  optimize: true # Tells svg-inliner to clean up your SVGs.

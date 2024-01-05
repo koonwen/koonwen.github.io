@@ -18,6 +18,8 @@
 # You can create any custom variable you would like, and they will be accessible
 # in the templates via {{ site.myvariable }}.
 
+repository: koonwen/koonwen.github.io
+
 title: "Koonwen (core dumped)"
 author: Koon Wen Lee
 email: koonwen@gmail.com

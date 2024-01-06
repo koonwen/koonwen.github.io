@@ -10,7 +10,8 @@ bio: Hello, my name is Koonwen and I like to build stuff.
 I graduated from [**Yale-NUS College**](https://www.yale-nus.edu.sg/)
 in 2023 with a BSc (Honors) in Mathematical, Computational and
 Statistical Science (Focus in Computer Science). I wrote my research
-thesis [*A Batch made in Heaven*](#) under [Dr Ilya
+thesis [*A Batch made in
+Heaven*](/assets/pdf/Koon-Wen-Lee-Capstone.pdf) under [Dr Ilya
 Sergey](https://ilyasergey.net/). I also participated in the [Pembroke
 International Exchange Programme Fall
 2023](https://www.pem.cam.ac.uk/international-programmes), studying

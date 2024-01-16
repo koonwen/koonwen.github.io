@@ -3,10 +3,8 @@ layout: post
 title: Continuation-Passing-Style for the pragmatic layman
 cover-pic: "/assets/img/cps-cover.jpg"
 date: 2024-01-07 16:47 +0800
-categories: ocaml cps
+prerequisites: OCaml | Tail-recursion
 ---
-##### Pre-requisite knowledge assumed: **OCaml syntax | Tail-recursion**
-# ---
 I've always found continuation-passing-style (CPS) one of the more an
 elusive concept to grasp. Today I came across a simple tree traversal
 problem that helped me work through some of that complexity.

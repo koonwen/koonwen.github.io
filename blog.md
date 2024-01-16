@@ -4,4 +4,4 @@ title: Blog
 permalink: /blog
 ---
 
-# My tech related articles
+# Tech articles

@@ -48,7 +48,7 @@ rss: rss
 #   instance: example.com
 
 
-show_excerpts: false # set to true to show excerpts on the homepage
+show_excerpts: false  # set to true to show excerpts on the homepage
 
 # Minima date format
 # refer to http://shopify.github.io/liquid/filters/date/ if you want to customize this
@@ -70,8 +70,14 @@ plugins:
  - jekyll-pdf-embed
  - jekyll-icon-list
  - jekyll-compose
- - jekyll-seo-tag
  - jekyll-inline-svg
+
+jekyll_compose:
+  default_front_matter:
+    drafts:
+      cover-pic:
+      prerequisites:
+      tags:
 
 defaults:
   -
@@ -95,3 +101,5 @@ icon_list:
 
 svg:
   optimize: true # Tells svg-inliner to clean up your SVGs.
+
+google_analytics: UA-NNNNNNNN-N

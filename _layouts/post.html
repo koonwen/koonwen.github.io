@@ -20,6 +20,10 @@ layout: default
     {% endif %}
 
     <div class="post-content e-content" itemprop="articleBody">
+        {%- if page.prerequisites %}
+        <h5>Pre-requisite knowledge assumed: <strong> {{ page.prerequisites }} </strong></h5>
+        {%- endif %}
+        <h1> — </h1>
         {{ content }}
     </div>
 

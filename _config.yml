@@ -78,6 +78,10 @@ jekyll_compose:
       cover-pic:
       prerequisites:
       tags:
+    post:
+      cover-pic:
+      prerequisites:
+      tags:
 
 defaults:
   -

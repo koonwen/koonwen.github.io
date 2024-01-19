@@ -78,7 +78,7 @@ jekyll_compose:
       cover-pic:
       prerequisites:
       tags:
-    post:
+    posts:
       cover-pic:
       prerequisites:
       tags:

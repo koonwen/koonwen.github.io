@@ -138,19 +138,22 @@ based on the specific algorithm
 ``` python
 def bin_search(arr, k):
     lo, hi = 0, len(hi)   # We include the len(hi) index as discussed earlier
-    midpoint = 0
     while lo < hi:
         midpoint = (lo + hi) // 2
         if arr[midpoint] == k:
             hi = midpoint
         else:
             lo = midpoint + 1
-    return midpoint < len(hi) and arr[midpoint] == k
+    return lo < len(arr) and arr[lo] == k
 ```
 
-Of course there are different ways to do this, but since I've gone
-through the effort to prove to myself that this combination works,
-I'll take this as my template solution.
+Checking either `lo` or `hi` will work because it is always the case
+that they will be equal to each other.
+
+Of course there are different ways to design this focusing on
+different bisection criteria. But since I've gone through the effort
+to prove to myself that this combination works, I'll take this as my
+template solution.
 
 ##### A lot of my ideas here are inspired by this great [article][article].
 

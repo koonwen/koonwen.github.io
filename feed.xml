@@ -1,0 +1,702 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.3">Jekyll</generator><link href="https://koonwen.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://koonwen.github.io/" rel="alternate" type="text/html" /><updated>2024-01-25T07:39:57+00:00</updated><id>https://koonwen.github.io/feed.xml</id><title type="html">(core dumped)</title><subtitle>Portfolio and Blog
+</subtitle><author><name>Koon Wen Lee</name></author><entry><title type="html">Understanding blockchain</title><link href="https://koonwen.github.io/2024/01/24/understanding-blockchain.html" rel="alternate" type="text/html" title="Understanding blockchain" /><published>2024-01-24T03:50:00+00:00</published><updated>2024-01-24T03:50:00+00:00</updated><id>https://koonwen.github.io/2024/01/24/understanding-blockchain</id><content type="html" xml:base="https://koonwen.github.io/2024/01/24/understanding-blockchain.html">&lt;p&gt;I’ve recently started reading about blockchain. To consolidate my
+understanding, I’ve put together an executive summary about what this
+technology is all about.&lt;/p&gt;
+
+&lt;h2 id=&quot;the-problem&quot;&gt;The Problem&lt;/h2&gt;
+&lt;p&gt;As always, we should start with the motivation for the technology. Do
+we trust banks as middlemen for our purchases? Even if we do, it comes
+back to that age old adage that we “shouldn’t place all our eggs in
+one basket”. what should happen if that central authority goes down?
+Now to rephrase the question more generally: can we have a trust-less
+service that allows us to exchange value?  Initially, this seems like
+an obvious contradiction because the whole point of the service is to
+act as a trusted third-party in the transaction. With blockchain
+however, we answer the question in the affirmative.&lt;/p&gt;
+
+&lt;h2 id=&quot;overview-by-example&quot;&gt;Overview by example&lt;/h2&gt;
+&lt;p&gt;Before diving into the technical under-workings of blockchain, it pays
+to get a general sense of what it is based on. Let’s say Alice and Bob
+are performing an exchange. Alice hands Bob $10 and now Alice is now
+$10 poorer and Bob is $10 richer. No trust is required because the
+money was physically handed over. This is not how we usually make
+transactions in the modern day though. Today we have banks that keep
+track of how much we own and perform the transaction by deducting or
+adding to our balance. So if Alice transfers Bob $10, Alice balance
+sheet gets reduced by $10 and Bob increases by $10, no physical money
+needs to exchange hands. That’s simple enough. The problem with this
+is that now we need to trust that the bank records this correctly and
+doesn’t make a blunder in updating the records (And all other worries
+we have about trusting central authorities). This type of transaction
+is akin to if Alice and Bob had a friend Charles that keeps track of
+who owes who. In this case Alice owes Bob $10. This is problematic if
+Charles mistakes the amount that was owed, worse still he may be
+biased to his good friend Alice.&lt;/p&gt;
+
+&lt;p&gt;Now enter the third option, Alice, Bob and Charles live in a small
+town of about 100 people. Instead of having only Charles keep track of
+the exchange, what if everyone in the town helped out by individually
+keeping track of the transaction. In such a case, we no longer have to
+have to rely on Charles as a fair and trustworthy third-party. We can
+spread our trust amongst the other 97 people in the town. If a dispute
+where to happen, we can rely on the majority to validate the
+transaction details. This is the premise of blockchain, a way to
+distribute the responsibility of book-keeping. Of course, whilst this
+is ideal, it has multiple problems.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;How do we secure transactions?&lt;/li&gt;
+  &lt;li&gt;How do we verify a transaction occurred?&lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;How do we get people to take part?&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;How do we prevent people from requesting a transaction when they have insufficient funds?&lt;/li&gt;
+  &lt;li&gt;How do we agree on an order of transactions since everyone is bound to receive them in different orders?&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The first three are the meat of blockchain technology and can be
+described fairly generically. I will tackle those here. The last two
+will be addressed in later posts discussing specific types of
+blockchains.&lt;/p&gt;
+
+&lt;h3 id=&quot;forward&quot;&gt;Forward&lt;/h3&gt;
+&lt;p&gt;What I initially confused when learning about blockchain was the
+process of securing a transaction and verifying that a transaction
+occurred. To give the general idea, securing a transaction is about
+knowing who currently owns the money. Verifying a transaction is then
+the process of adding it to the public transaction log to confirms the
+exchange of ownership of the money. To put it in less technical terms,
+securing a transaction would be as though Alice signs her name that
+she approves a transaction to Bob for $10. Verifying this transaction
+would be to actually upgrade this local agreement to the global ledger
+such that the transaction is visible to everyone.&lt;/p&gt;
+
+&lt;h3 id=&quot;how-do-we-secure-transactions&quot;&gt;How do we secure transactions?&lt;/h3&gt;
+&lt;p&gt;In the physical world, it suffices to say that if the money is
+physically in my possession, it is mine (unless I’ve stolen it of
+course). However, when dealing with digital currency, ownership is not
+so straightforward. It turns out that the way to keep track of
+ownership is by keeping a log of the history of transactions. You
+could think of this as if we had to write down the name of the person
+we were giving the money to before we pass it to them. To make this
+chain secure so that only the people who own the money can spend it,
+the transaction log is a trail of &lt;strong&gt;cryptographically&lt;/strong&gt; secure
+signatures of the people who previously owned it until it’s current
+owner. Cryptography in this sense, is used to make stealing or
+masquerading as someone else computationally infeasible.&lt;/p&gt;
+
+&lt;p&gt;The technical term for this is called &lt;strong&gt;Asymmetric cryptography (Or
+public key cryptography)&lt;/strong&gt;. At a high level, this works by each user
+have a pair of keys. A public one and a private one. The public one is
+available to other users whilst the private one is kept a secret only
+to the user. These pair of keys have a unique feature to them which is
+that they can be used to digitally sign a message and make it close to
+impossible to forge. Procedurally, signing and verifying looks like
+the following:&lt;/p&gt;
+
+&lt;div class=&quot;language-text highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Sign(Message, private_key) =&amp;gt; Signature
+
+Verify(Message, Signature, public_key) =&amp;gt; True/False
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;As mentioned, the important feature of this encryption process is that
+it is there is no known way to reverse-engineer it. Knowing how the
+algorithm works doesn’t allow one to discover the private
+key. Furthermore, a slight change in the message contents, causes
+wildly different signature so there’s no relationship/pattern we can
+use to generate a valid signature other than guessing and checking.&lt;/p&gt;
+
+&lt;p&gt;Hence we arrive at the term cryptocurrency. We can now see where and
+why cryptography is applied to the digital currency.&lt;/p&gt;
+
+&lt;h3 id=&quot;how-do-we-verify-transactions&quot;&gt;How do we verify transactions?&lt;/h3&gt;
+&lt;p&gt;After a secure transaction is broadcasted, it ends up in a pool of
+“pending transactions”. At this time, we introduce other actors in the
+system known as “miners”. In our example, the minors are analogous to
+anyone in the town. The job of the miner is to pick up these
+transactions and then validate them so that they end up on the public
+ledger. For this process to occur, miners must first complete a
+computational “challenge/puzzle”. Upon completion, it awards them a
+prize and the ability to append a new block (some set of pending
+transactions) onto the chain. It should be noted that appending a
+block onto the chain doesn’t yet guarantee permanence or legitimacy of
+the action. Instead, nodes work on the policy of following the longest
+chain. This means that even if a bad actor were to successfully solve
+the challenge before other nodes, it would only be able to append a
+single block. To keep up with it’s scam, it would have to continuously
+outperform the rest of the miners to have it’s chain become
+validated. Unless the bad actor has the computational power of more
+than 50% of the system, it is proven that it is computationally
+infeasible for a bad actor to invalidate the system.&lt;/p&gt;
+
+&lt;h3 id=&quot;how-do-we-get-people-to-take-part&quot;&gt;How do we get people to take part?&lt;/h3&gt;
+&lt;p&gt;A vital part to a functioning blockchain is that there are a
+distributed set of machines called “nodes” that are working to
+validate transactions. Similar to how we have people in the town
+actively keeping track of transactions that happen. To reward the
+nodes, a node is given with a small amount of the
+cryptocurrencies. This keeps people/businesses incentivized to run
+their nodes participating in the exchange. On top of that, some
+transaction even offer transaction fees that goes to the nodes (known
+as miners) that successfully validate their transaction.&lt;/p&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+&lt;p&gt;To come full circle, given my understanding of blockchain works, I
+don’t think it’s accurate to say that it’s trust-less. I think it is
+trust-less in so far as we think of it as having no central
+authority. It still remains the fact that we need to have trust in the
+&lt;strong&gt;majority&lt;/strong&gt; of actors in the system.  I suppose the answer is still
+fairly clear that it’s better to place our bets on the majority rather
+than a single entity, no matter how trustworthy.&lt;/p&gt;</content><author><name>Koon Wen Lee</name></author><summary type="html">I’ve recently started reading about blockchain. To consolidate my understanding, I’ve put together an executive summary about what this technology is all about.</summary></entry><entry><title type="html">Drawing boundaries for the Xen ecosystem</title><link href="https://koonwen.github.io/2024/01/23/drawing-boundaries-for-the-xen-ecosystem.html" rel="alternate" type="text/html" title="Drawing boundaries for the Xen ecosystem" /><published>2024-01-23T05:01:00+00:00</published><updated>2024-01-23T05:01:00+00:00</updated><id>https://koonwen.github.io/2024/01/23/drawing-boundaries-for-the-xen-ecosystem</id><content type="html" xml:base="https://koonwen.github.io/2024/01/23/drawing-boundaries-for-the-xen-ecosystem.html">&lt;p&gt;The Xen ecosystem is quite ironic. It’s main product is hypervisor
+that cleanly separates hardware resources. However, when it comes to
+the organization of it’s ecosystem though, the lines between tools and
+terminology are blurred and complicated. My post today is my
+understanding and attempt to draw boundaries to help myself and other
+beginners compartmentalize parts of the ecosystem. I will detail the 4
+big components: Xen hypervisor, Xen-project, Xenserver and XAPI.&lt;/p&gt;
+
+&lt;h2 id=&quot;xen-hypervisor&quot;&gt;Xen hypervisor&lt;/h2&gt;
+&lt;p&gt;Xen is the name of a type-1 hypervisor (Bare metal) which gives
+enables virtualization of multiple operating system to run on the
+&lt;strong&gt;&lt;em&gt;same&lt;/em&gt;&lt;/strong&gt; host machine. In the software stack, the Xen hypervisor can be
+thought of as a custom kernel (excluding device drivers) which “shims”
+in the functionality to separate and isolate the hardware. On top of
+the hypervisor, there are regions known as “domains” which can be seen
+as a container for each guest operating system. There is a special
+domain called “dom0” aka the “Control domain” which holds contains a
+Linux kernel that provides the device drivers for the host. It is a
+privileged domain that is able to “talk” directly to the hypervisor
+and instruct it to spin up or shutdown other guest operating
+systems. The device drivers in dom0 are shared with the other guest
+operating systems in their respective unprivileged domains, referred
+to as “domU’s”.&lt;/p&gt;
+
+&lt;p&gt;The order in which the
+components interface with one another are as follows:&lt;/p&gt;
+&lt;div class=&quot;language-text highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;            Guest OS_1, Guest OS_2, GuestOS_N... (domU's)
+                        Control Domain (dom0)
+                            Xen Hypervisor
+                          Physical Hardware
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;xen-project&quot;&gt;Xen-project&lt;/h2&gt;
+&lt;p&gt;The Xen-project is a collection of open source projects hosted under
+the &lt;strong&gt;&lt;em&gt;Linux foundation&lt;/em&gt;&lt;/strong&gt;. It contains the hypervisor itself and
+several sub-projects including: Windows PV driver, MirageOS, unikraft,
+XAPI, XCP, etc.&lt;/p&gt;
+
+&lt;h4 id=&quot;terminology-what-is-a-tool-stack&quot;&gt;Terminology: What is a Tool stack?&lt;/h4&gt;
+&lt;blockquote&gt;
+  &lt;p&gt;A tool stack is a set of cooperating daemons that provide a
+higher-level interface to manage Xen hosts. It extends the base
+hypervisor to provides system management tools such as basic setup,
+configuration, etc.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&quot;xapi&quot;&gt;XAPI&lt;/h2&gt;
+&lt;p&gt;XAPI refers to Xen-project default &lt;strong&gt;tool stack&lt;/strong&gt; which includes basic
+system management as well as functionality to remotely configuring and
+controlling virtualised guests on hosts.&lt;/p&gt;
+
+&lt;h2 id=&quot;xenserver&quot;&gt;Xenserver&lt;/h2&gt;
+&lt;p&gt;An enterprise platform for orchestrating/managing Xen
+virtualization. It packages the hypervisor, XAPI tool stack, custom
+Linux kernel and other open source components (i.e. XenCenter ) to
+provides a platform for large scale management. It can be thought of
+as a “distro” because much of the work is about versioning and
+integration of components. They also - like a distro, provide seamless
+upstream patching for their users. It is being led by Citrix (now
+acquired by Vista Equity Partners and Evergreen Coast Capital).&lt;/p&gt;
+
+&lt;h2 id=&quot;diagram&quot;&gt;Diagram&lt;/h2&gt;
+&lt;p&gt;I think the relationship between these entities are best described
+visually by these concentric circles.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/xen-diagram.png&quot; alt=&quot;diagram&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+&lt;p&gt;In essence, we have the hypervisor which is the lowest level software
+interacting with the hardware - providing the virtualization
+capabilities. On top of that, XAPI is a collection of tools that
+address system management of virtual machines using Xen. It includes
+more than just a regular tool stack with remote management of Xen
+hosts. The Xen-project is the overarching entity of open-source
+projects around Xen including the hypervisor, XAPI and other tools
+extending Xen. Finally Xenserver is an enterprise platform that builds
+around XAPI and other tools with orchestration capabilities
+Sysadmin-like user interface (XenCenter). The work being done around
+Xenserver is “distro-like” in it’s responsibilities of package
+versioning and ensuring seamless integration between tools.&lt;/p&gt;</content><author><name>Koon Wen Lee</name></author><summary type="html">The Xen ecosystem is quite ironic. It’s main product is hypervisor that cleanly separates hardware resources. However, when it comes to the organization of it’s ecosystem though, the lines between tools and terminology are blurred and complicated. My post today is my understanding and attempt to draw boundaries to help myself and other beginners compartmentalize parts of the ecosystem. I will detail the 4 big components: Xen hypervisor, Xen-project, Xenserver and XAPI.</summary></entry><entry><title type="html">Disciplined indexing with Binary-search</title><link href="https://koonwen.github.io/2024/01/18/disciplined-indexing-with-binary-search.html" rel="alternate" type="text/html" title="Disciplined indexing with Binary-search" /><published>2024-01-18T12:33:00+00:00</published><updated>2024-01-18T12:33:00+00:00</updated><id>https://koonwen.github.io/2024/01/18/disciplined-indexing-with-binary-search</id><content type="html" xml:base="https://koonwen.github.io/2024/01/18/disciplined-indexing-with-binary-search.html">&lt;p&gt;The topic for today’s article was churned up out of frustration thanks
+to the classic “off-by-one” error. The especially annoying thing is
+that Binary-search is one of those elementary algorithms that you
+should be able to produce without hiccup. Except that it’s happened
+now a couple times that I spend way too long figuring out where I’m
+messing up the indices. With this article, I put forth a set of
+“rules” to think about when implementing binary search in future.&lt;/p&gt;
+
+&lt;h2 id=&quot;binary-search-a-summary&quot;&gt;Binary Search: a summary&lt;/h2&gt;
+&lt;p&gt;Binary search is a quick way to search technique given an &lt;strong&gt;ordered
+collection&lt;/strong&gt;. The search runs by looking at the arbitrary midpoint and
+checking if we should continue the search to the left or to the
+right. We do this same process until we end up with just one element,
+at which point we can decide that the search was successful or
+not. Being able to halve the problem every time leads to a fantastic
+time complexity of O(log(n)).&lt;/p&gt;
+
+&lt;h2 id=&quot;bisect--binary-search&quot;&gt;Bisect &amp;gt; Binary search&lt;/h2&gt;
+&lt;p&gt;One thing I learnt about approaching Binary search problems, is that
+you should think about them instead as a bisection problems. This
+means that rather than viewing the algorithm as a search method, we
+look at it from the vantage point of a method to reduce our search
+space. This subtle shift in mind-set arrives at a different
+perspective of our usual “We use Binary search to look for an element”
+to “We use Binary search to throw away the bits that don’t matter”.&lt;/p&gt;
+
+&lt;p&gt;Still confused? Let’s put it into concrete terms. Given some sorted
+array &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;arr&lt;/code&gt; of elements, identify if the element &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;k&lt;/code&gt; is in the
+array. If we are thinking about this in terms of bisection, our
+question is now: “identify the smallest index where the element is
+equal to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;k&lt;/code&gt;”&lt;/p&gt;
+
+&lt;p&gt;Here are some example arrays where we’d expect the final index to land&lt;/p&gt;
+&lt;div class=&quot;language-text highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;k = 3
+
+Case1:[1,2,3,4,5,6]
+           ^
+Case2:[3,3,3,3,3,3]
+       ^
+Case3:[1,2,3,3,3,4]
+           ^
+Case4:[1,1,1,1,1,1]
+                   ^
+Case5:[4,4,4,4,4,4]
+       ^
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Cases1-3 are fairly self explanatory, we landed on the index where the
+element under the index is equal to 3 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;and&lt;/code&gt; is also the earliest 3 we
+encounter if we traverse the list from left to right. How about Case4?
+What if 3 is not in the list? Then by our bisection criteria, we
+should rightly land outside the list, Translated into indices, we only
+have &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0 - N-1&lt;/code&gt; index elements, but we will allow our search to also
+land on &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;N&lt;/code&gt;. This means that if our index is on &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;N&lt;/code&gt; we can conclude
+that &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;k&lt;/code&gt; is not in the array.&lt;/p&gt;
+
+&lt;p&gt;However, look at Case5. Although &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;3&lt;/code&gt; is not in the list, the final
+index lands on position &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0&lt;/code&gt; (In accordance to how expect the search to
+move leftwards rather than to the right as in Case4). This is a
+problem, shouldn’t we also allow &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;-1&lt;/code&gt; to be a possible index to land
+on? The answer is yes but mostly no. Yes, in that we should be landing
+outside the array bounds following the bisection principle. No because
+this will complicate how we decide to bisect the array as well as how
+we find divide to find the midpoint. The workaround is to have two
+checks at the end:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Make sure you’re within array bounds&lt;/li&gt;
+  &lt;li&gt;if you’re within, check that the element under my index is equal to
+&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;k&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;termination&quot;&gt;Termination&lt;/h2&gt;
+&lt;p&gt;Another thing to make sure to get right, is that the algorithm doesn’t
+get stuck looping on the same index. The key to this are three things,
+the &lt;strong&gt;loop invariant&lt;/strong&gt;, how you find the &lt;strong&gt;midpoint&lt;/strong&gt; and how you get the
+new &lt;strong&gt;array bounds&lt;/strong&gt;. These three &lt;strong&gt;MUST&lt;/strong&gt; be compatible to ensure
+that your algorithm will eventually hit the base case. One combination
+that works is:&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;loop&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;invariant&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;lo&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;hi&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;midpoint&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;lo&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;hi&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;//&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;    &lt;span class=&quot;c1&quot;&gt;# floor division
+&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;array&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;bounds&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;arr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;midpoint&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;k&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+                  &lt;span class=&quot;n&quot;&gt;hi&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;midpoint&lt;/span&gt;
+              &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+                  &lt;span class=&quot;n&quot;&gt;lo&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;midpoint&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Let’s go through why this work, starting with the array bounds. Given
+our bisection criteria again, if the element we are currently on is
+equal to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;k&lt;/code&gt;, we may or may not be on the smallest index. Eitherways
+we have to keep it’s index &lt;strong&gt;inside&lt;/strong&gt; the array bounds so we only
+update &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;hi = midpoint&lt;/code&gt;. In the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;else&lt;/code&gt; case, we know for certainty that
+we can exclude the current index, therefore the ‘+1’.&lt;/p&gt;
+
+&lt;p&gt;For the midpoint calculation, we use floor division which gives us the
+following properties. If the number of elements we are considering is
+&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;odd&lt;/code&gt; we have an true midpoint. Floor division gives the correct index
+of that midpoint when we use indices bounds. E.g. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(0 + 4) // 2 = 2&lt;/code&gt;.
+&lt;strong&gt;index 2&lt;/strong&gt; in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;[1,2,3,4,5]&lt;/code&gt; is the element 3, perfectly in the
+middle. However, if we are performing the division for an even number
+of elements, then we land to the left of the middle. So the index that
+we land on for the array &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;[1,2,3,4]&lt;/code&gt;, would be &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(0+3) // 2 = 1&lt;/code&gt;
+&lt;strong&gt;index 1&lt;/strong&gt;, which is &lt;strong&gt;element 2&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;With the above constraints, the only way we can “get stuck” is if we
+always calculate the same midpoint and the value under the midpoint
+index is equal to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;k&lt;/code&gt;, so that &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;hi&lt;/code&gt; remains the same. We can narrow
+this down further to when &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;lo&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;hi&lt;/code&gt; are next to each other since
+our loop invariant exits when &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;lo == hi&lt;/code&gt;. Now we just have to realize
+that our previous argument said that if we are considering an even
+number of elements, we always end up to the left of the middle. That
+means that our &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;hi&lt;/code&gt; will always progress to equal &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;lo&lt;/code&gt; and terminate
+the loop invariant. Nice!&lt;/p&gt;
+
+&lt;h2 id=&quot;all-in-all&quot;&gt;All in all&lt;/h2&gt;
+&lt;p&gt;Now why go through all that effort to turn the binary search into
+bisection? For a lot of questions I’ve run into, binary search is
+often employed to find bisection. E.g “Find the earliest occurrence in
+a git history of a bad commit”. In such cases, I mess up by being
+“one-off” because the search criteria in my head is looking for an
+exact point. Trying to edit it after is like working out if the three
+factors for termination play nice which is a disaster. Bisection works
+in both cases so it’s much better to go with one disciplined approach.&lt;/p&gt;
+
+&lt;p&gt;Our final solution looks something like this that can be modified
+based on the specific algorithm&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;bin_search&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;arr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;k&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;lo&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;hi&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;len&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;hi&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;   &lt;span class=&quot;c1&quot;&gt;# We include the len(hi) index as discussed earlier
+&lt;/span&gt;    &lt;span class=&quot;k&quot;&gt;while&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;lo&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;hi&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;midpoint&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;lo&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;hi&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;//&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;arr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;midpoint&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;k&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;hi&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;midpoint&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;lo&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;midpoint&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;lo&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;len&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;arr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;and&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;arr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;lo&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;k&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Checking either &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;lo&lt;/code&gt; or &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;hi&lt;/code&gt; will work because it is always the case
+that they will be equal to each other.&lt;/p&gt;
+
+&lt;p&gt;Of course there are different ways to design this focusing on
+different bisection criteria. But since I’ve gone through the effort
+to prove to myself that this combination works, I’ll take this as my
+template solution.&lt;/p&gt;
+
+&lt;h5 id=&quot;a-lot-of-my-ideas-here-are-inspired-by-this-great-article&quot;&gt;A lot of my ideas here are inspired by this great &lt;a href=&quot;http://coldattic.info/post/95/&quot;&gt;article&lt;/a&gt;.&lt;/h5&gt;</content><author><name>Koon Wen Lee</name></author><summary type="html">The topic for today’s article was churned up out of frustration thanks to the classic “off-by-one” error. The especially annoying thing is that Binary-search is one of those elementary algorithms that you should be able to produce without hiccup. Except that it’s happened now a couple times that I spend way too long figuring out where I’m messing up the indices. With this article, I put forth a set of “rules” to think about when implementing binary search in future.</summary></entry><entry><title type="html">Breaking down Dynamic-Programming</title><link href="https://koonwen.github.io/2024/01/15/breaking-down-dynamic-programming.html" rel="alternate" type="text/html" title="Breaking down Dynamic-Programming" /><published>2024-01-15T15:22:00+00:00</published><updated>2024-01-15T15:22:00+00:00</updated><id>https://koonwen.github.io/2024/01/15/breaking-down-dynamic-programming</id><content type="html" xml:base="https://koonwen.github.io/2024/01/15/breaking-down-dynamic-programming.html">&lt;p&gt;Dynamic-Programming (DP) is one of those things that makes my brain
+overheat. To a first approximation, DP is an algorithmic trick that
+improves the time complexity of otherwise exponential algorithms. DP
+manages this because it avoids doing unnecessary re-computation - A
+common feature that causes problems to grow exponentially. Instead
+of re-computing something we’ve already done before, DP says “let’s
+store this result because I’ll have to refer back to it”.  Sound
+simple? In practice, not so much. This post tries to provide a clear
+step by step to approach such problems.&lt;/p&gt;
+
+&lt;h2 id=&quot;when-does-dp-apply&quot;&gt;When does DP apply?&lt;/h2&gt;
+&lt;p&gt;The first thing that makes DP challenging is that it’s not clear when
+it applies. I believe there’s no simple way to figure it out
+either. So far, I use some heuristics like thinking about if the
+problem asks for “an optimal combination”. This usually means that the
+brute force solution would have you calculate &lt;em&gt;all possibilities&lt;/em&gt; to
+find the best one. This is the dead giveaway that your algorithm
+diverges. That said, sometimes problems that seem like DP could
+actually just by a simple Greedy algorithm, so it’s worth trying that
+approach first before committing to DP.&lt;/p&gt;
+
+&lt;h2 id=&quot;a-problem&quot;&gt;A Problem&lt;/h2&gt;
+&lt;p&gt;Calculate the i-th term Fibonacci sequence&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-math&quot;&gt;Fib(n) = Fib(n-1) + Fib(n-2)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&quot;naive-solution&quot;&gt;Naive solution&lt;/h3&gt;
+&lt;p&gt;This is pretty much in your face exponential because of the recursive
+definition. Implementing it recursively is basically brute force and
+would yield exponential time complexity&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-python&quot; data-lang=&quot;python&quot;&gt;&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;fib&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;n&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;n&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fib&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;n&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fib&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;n&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;h3 id=&quot;looking-top-down&quot;&gt;Looking Top-down&lt;/h3&gt;
+&lt;p&gt;The problem with our recursive solution is that we have a lot of
+branching and incur many repeated sub-computation.&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;              fib(4)
+             /      \
+        fib(3)       fib(2)
+        /   \        /    \
+    fib(2)  fib(1) fib(1) fib(0)
+    /    \
+fib(1)  fib(0)
+
+We can see that *fib(2)* is repeated 2 times and fib(1) and
+fib(0), 3 and 2 times respectively.
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;One way to visualize your algorithm is to think if the evaluation
+expands into a N-branch tree. In that case, you can start think if you
+can leverage &lt;strong&gt;Memoization&lt;/strong&gt;. Memoization is the one of two DP
+approaches. As per the name, here the memo is where we are going to
+save the result of some sub-computation and lookup later when we need
+it. How we’ll do this is to add a table lookup just before we descend
+into the recursion and make sure to save the results into the table
+when we get them.&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-python&quot; data-lang=&quot;python&quot;&gt;&lt;span class=&quot;n&quot;&gt;memo&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;dict&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;fib&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;n&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;n&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;memo&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;memo&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;n&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;n&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;res&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fib&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;n&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fib&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;n&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;memo&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;n&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;res&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;res&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;If you can’t yet tell, this basically causes the recursion to
+short-circuit because it can find the previously computed results in
+the table. Our runtime is significantly better since we only really
+descend down the left side of the tree and every subsequent right
+child’s result cost a single constant lookup. Something to note about
+the time complexity is that this is O(n), not O(log(n)). You might be
+quick to assume that because of the tree I drew but actually we
+descend n times down the left side, so we haven’t split the problem in
+half.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;We call this a top-down approach because the recursive call begins
+at the top and bottoms out at the base case and builds back up the
+result.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h3 id=&quot;from-bottom-up&quot;&gt;From Bottom-up&lt;/h3&gt;
+&lt;p&gt;The second technique DP technique is called &lt;strong&gt;Tabulation&lt;/strong&gt;. With this
+method, we skip the recursion downward and just start directly from
+the base case and build the result up. We also use a table to keep
+track and reference our previous results. Our Fibonacci problem is not
+the most motivating case for a table (explained later) but I will
+demonstrate it anyway. For intuition, instead of trying to calculate
+our results from the top, notice that working from the bottom pretty
+easy. That is, we can find fib(2) easily because it is fib(1) + fib(0)
+which we know to be 1 + 1 effectively. Then fib(3) is fib(2) + fib(1)
+and we just calculated the result of fib(2), and so forth.&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;fib&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;n&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;tbl&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;n&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;tbl&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tbl&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;range&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;n&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;tbl&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tbl&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tbl&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tbl&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;n&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;In this implementation, we iteratively calculate up toward the value
+that we want using the result of previous calculated
+result. Leveraging the same idea used in memoization, just in a
+different style.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;This is bottom-up because we start directly from the base case. An
+interesting note is that memoization usually involves recursion and
+tabulation uses simple iteration so it is generally faster because
+it doesn’t need to allocate stack frames for the recursive function
+calls.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&quot;a-harder-problem&quot;&gt;A Harder Problem&lt;/h2&gt;
+&lt;p&gt;As alluded to, using tabulation for the Fibonnacci problem is
+unnecessary here because we only really need to keep track of one
+variable to calculate the subsequent result. Tabulation shines when
+there are multiple “choices” to be made. Let’s see an example:&lt;/p&gt;
+
+&lt;p&gt;“The assembly-line problem: Given 2 assembly lines, each with M
+stations where M is some given integer value representing the time
+taken at the station. Determine the shortest path that can be taken
+through the factory if there is also a cost to transferring between
+assembly lines”&lt;/p&gt;
+
+&lt;div class=&quot;language-text highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Line1: 5 -&amp;gt; 2  -&amp;gt; 10 -&amp;gt; 7
+Line2: 1 -&amp;gt; 12 -&amp;gt; 1  -&amp;gt; 1
+
+Line1 to Line2 transfer cost: [2, 1,  5]
+Line2 to Line1 transfer cost: [1, 12, 15]
+
+The optimal solution is the following:
+Line1:    5    2   10   7
+             /   \
+         +1 /     \ +1
+           /       \
+Line2: -&amp;gt; 1    12    1 -&amp;gt; 1  =&amp;gt; 1 + 1 + 2 + 1 + 1 + 1 = 7
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;It’s worth looking first what the recursive solution might look like&lt;/p&gt;
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;path&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;l1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;l2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;l1_l2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;l2_l1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;length&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;len&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;l1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;aux&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;line&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;line_other&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;switch&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;switch_other&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;line&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;elif&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;length&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;min&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;aux&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;l1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;l2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;l2_l1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;l1_l2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;aux&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;l2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;l1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;l1_l2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;l2_l1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;stay&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;aux&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;line&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;line_other&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;switch&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;switch_other&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;switch&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;aux&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;line_other&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;line&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;switch_other&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;switch&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;switch&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;min&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;stay&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;switch&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;line&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;aux&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;length&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;l1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;l2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;l2_l1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;l1_l2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;As you can see, we have to keep track of multiple variables in our
+&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;aux&lt;/code&gt; recursive function which makes the code rather clunky. Adding in
+memoization would just make it even more complex. Now look at the
+tabulation solution&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;path_tab&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;l1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;l2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;l1_l2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;l2_l1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;length&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;len&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;l1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;range&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;length&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;l1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;min&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;l1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;l2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;l2_l1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;l2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;min&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;l2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;l1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;l1_l2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;min&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;l1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;length&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;l2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;length&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The iterative solution to my mind is much easier to follow what is
+going and also overall cleaner. Unlike the recursive solution, we
+don’t have to pass on variables to the next recursive call.&lt;/p&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+&lt;p&gt;This sums up the introduction to Dynamic programming, why it works,
+when it applies and the trade-off between the two main techniques.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;When you see branching with similar looking sub-branches, it’s
+probably going to need DP.&lt;/p&gt;
+&lt;/blockquote&gt;</content><author><name>Koon Wen Lee</name></author><summary type="html">Dynamic-Programming (DP) is one of those things that makes my brain overheat. To a first approximation, DP is an algorithmic trick that improves the time complexity of otherwise exponential algorithms. DP manages this because it avoids doing unnecessary re-computation - A common feature that causes problems to grow exponentially. Instead of re-computing something we’ve already done before, DP says “let’s store this result because I’ll have to refer back to it”. Sound simple? In practice, not so much. This post tries to provide a clear step by step to approach such problems.</summary></entry><entry><title type="html">Continuation-Passing-Style for the pragmatic layman</title><link href="https://koonwen.github.io/2024/01/07/continuation-passing-style-for-the-pragmatic-layman.html" rel="alternate" type="text/html" title="Continuation-Passing-Style for the pragmatic layman" /><published>2024-01-07T08:47:00+00:00</published><updated>2024-01-07T08:47:00+00:00</updated><id>https://koonwen.github.io/2024/01/07/continuation-passing-style-for-the-pragmatic-layman</id><content type="html" xml:base="https://koonwen.github.io/2024/01/07/continuation-passing-style-for-the-pragmatic-layman.html">&lt;p&gt;I’ve always found continuation-passing-style (CPS) one of the more an
+elusive concept to grasp. Today I came across a simple tree traversal
+problem that helped me work through some of that complexity.&lt;/p&gt;
+
+&lt;h2 id=&quot;the-problem&quot;&gt;The Problem&lt;/h2&gt;
+&lt;p&gt;Suppose you are given an integer value &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;target&lt;/code&gt; and a binary tree
+whereby each node has a integer value assigned to it. Identify if a
+path exists from the root to leaf whereby the total sum of the path
+equates to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;target&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&quot;solution-1-classic-recursion&quot;&gt;Solution 1: Classic recursion&lt;/h3&gt;
+&lt;p&gt;At first glance, this question can be solved with the classic
+recursive approach. That is, we recursively traverse down the tree
+until we hit a leaf node as our base case. Along the way, we subtract
+the value of the current node from the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;target&lt;/code&gt; and pass on the
+difference. In the base case, we now have the result whether the sum
+of the path is equal to the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;target&lt;/code&gt; and we will need to bubble up the
+result. In OCaml, we would have something like&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-ocaml&quot; data-lang=&quot;ocaml&quot;&gt;&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;node&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Lf&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Br&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;of&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;node&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;node&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;rec&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;find_path&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;node&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;target&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;match&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;node&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;with&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Lf&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;target&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Br&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;l&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;r&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;
+      &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;lv&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;find_path&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;l&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;target&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;in&lt;/span&gt;
+      &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rv&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;find_path&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;r&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;target&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;in&lt;/span&gt;
+      &lt;span class=&quot;n&quot;&gt;lv&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;||&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rv&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;This works, but it’s very memory intensive. The recursive calls blow
+up the stack with a lot of pending function frames. Can we do better?
+More precisely, can we make this function tail-recursive?&lt;/p&gt;
+
+&lt;p&gt;Not all functions are created equal. Some happen to be easier to be
+converted their tail-recursive counterparts. Unfortunately,
+&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;find_path&lt;/code&gt; is one of those difficult functions. The reasons why this
+is the case currently escapes me and will be tackled in a later
+post. For now, let’s assume that to be the case. (Or you can try
+to come up with the tail-recursive solution yourself)&lt;/p&gt;
+
+&lt;h3 id=&quot;solution-2-cps-transformation&quot;&gt;Solution 2: CPS transformation&lt;/h3&gt;
+&lt;p&gt;Turns out, the way to convert such a function to a tail-recursive
+version is to leverage the idea of &lt;em&gt;continuations&lt;/em&gt;. There’s a lot of
+technical literature on the topic obfuscating what the term refers
+to. To my mind, it just means “what is next thing to do”. In other
+words, if you ran a program and paused it at some arbitrary point
+(think a debugger), what’s left to do is the continuation of that
+program. So continuation-passing-style, is a way of programming where
+we explicitly pass functions “the next thing to do”. What does that
+look like in code? Instead of functions returning values to the
+caller, we can design functions that return with a new function call.&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-ocaml&quot; data-lang=&quot;ocaml&quot;&gt;&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;find_path_cps&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;node&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;target&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;rec&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;aux&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;node&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;target&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;k&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;match&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;node&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;with&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Lf&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;k&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;target&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Br&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;l&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;r&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;aux&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;l&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;target&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;fun&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;lv&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;aux&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;r&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;target&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;fun&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rv&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;k&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;lv&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;||&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rv&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;in&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;aux&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;node&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;target&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Fun&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;id&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;This looks confusing and it is. I took some time to really process
+what exactly is going on in this function. Let’s start with the most
+obvious. Firstly our cps version defines an auxiliary function with an
+added parameter &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;k&lt;/code&gt; that stands for continuation. This parameter can
+be thought of as a kind of accumulator that builds up the things “left
+to do” in the same way that the recursive solution builds up stack
+frames to keep track of pending computation to execute later. In CPS
+we don’t leave anything in the stack pending instead by passing the
+&lt;em&gt;continuation&lt;/em&gt; represented by a function to the next recursive
+call. In such a way, our cps inspired function is now tail-recursive
+by passing around a function pointer.&lt;/p&gt;
+
+&lt;h3 id=&quot;solution-3-short-circuiting-cps&quot;&gt;Solution 3: Short-circuiting CPS&lt;/h3&gt;
+&lt;p&gt;Reducing memory usage is one of the main advantages of CPS but it also
+allows us to “short-circuit” functions. Specifically for the case of
+&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;find_path&lt;/code&gt; we could design it in such a way to “forget” about what’s
+left to do and have an escape hatch that allows us to return early
+once we found a path that exists.&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-ocaml&quot; data-lang=&quot;ocaml&quot;&gt;&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;find_path_cps_fast&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;node&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;target&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;rec&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;aux&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;node&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;target&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;k&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;match&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;node&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;with&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Lf&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;k&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;target&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Br&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;l&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;r&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;aux&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;l&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;target&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;fun&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;lv&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;aux&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;r&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;target&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;fun&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rv&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;
+                &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;lv&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;then&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;true&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;k&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rv&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;in&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;aux&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;node&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;target&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Fun&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;id&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;In this new implementation, we insert a conditional within the
+continuation to ignore searching down the right subtree.&lt;/p&gt;
+
+&lt;h2 id=&quot;benchmarks&quot;&gt;Benchmarks&lt;/h2&gt;
+&lt;p&gt;Initializing a balanced binary tree of height=26 =&amp;gt; 67108863 nodes
+with a single valid path down the left spine, we get the following
+results&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;        recursive: 13.87 WALL &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;13.87 usr +  0.00 sys &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 13.87 CPU&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; @  0.72/s &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;n&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;10&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+              cps: 18.27 WALL &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;18.27 usr +  0.00 sys &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 18.27 CPU&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; @  0.55/s &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;n&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;10&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+cps short circuit:  0.00 WALL &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt; 0.00 usr +  0.00 sys &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;  0.00 CPU&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; @ 3333333.34/s &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;n&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;10&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Clearly, the test case is skewed to show the best performance of the
+&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cps short circuiting&lt;/code&gt; function. If the valid path was down the right
+of the tree, we would get similarly bad performance as the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cps&lt;/code&gt;
+implementation. What’s interesting is perhaps the bad performance of
+our &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cps&lt;/code&gt; implementation. My guess is that whilst we are saving on
+stack memory, we have moved the recursion into heap memory by
+allocating pointers onto the heap which is invariably slower.&lt;/p&gt;
+
+&lt;p&gt;This finding motivated me to dig into seeing when we actually benefit
+from writing stack-saving cps functions. For this particular case, our
+recursive call depth is limited by the height of the tree which is
+pretty shallow, not nearly big enough to burst the stack. This means
+that one needs to consider the actual depth of the recursive calls and
+whether they realistically place any stress on the stack. A traversal
+over a list is perhaps a more motivating case for a CPS transformation
+than our tree here. In fact, I ended up running out of memory just by
+the allocation of the tree alone. To which we come to the second
+interesting observation, you need to consider that your CPS function
+will be competing with your data structure (if any) for resources on
+the heap. For most user programs, we don’t usually get that kind of
+scale for data structures anyway. It usually makes sense to opt for
+the simpler recursive solution.&lt;/p&gt;
+
+&lt;p&gt;(In utop and OCaml bytecode programs, the stack limit is 1024k words
+whilst natively compiled programs depend on the system limits which
+is 8192 in my case)&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Food for thought: Continuations are an abstraction of the program stack&lt;/p&gt;
+&lt;/blockquote&gt;</content><author><name>Koon Wen Lee</name></author><summary type="html">I’ve always found continuation-passing-style (CPS) one of the more an elusive concept to grasp. Today I came across a simple tree traversal problem that helped me work through some of that complexity.</summary></entry></feed>

@@ -1,14 +1,15 @@
 ---
 layout: post
-title: Introduction to efficient concurrency through Eio
+title: Efficient concurrency through eio
 cover-pic: "/assets/img/eio-cover.png"
 date: 2024-07-24 16:50 +0800
 prerequisites: OCaml
 ---
 Getting concurrency right is often tricky. Recently, I've been playing
-around with **eio**, an IO concurrency library for OCaml. In
-particular, I've been trying to implement an efficient directory copy
-algorithm. This problem is deceivingly simple, here's how it went.
+around with **eio**, an IO concurrency library for OCaml. In particular, I've
+been trying to optimize a recursive directory copy algorithm, hoping to use
+concurrency to get a speed boost. Turns out, this problem was much more
+intricate than I anticipated! Here's how it went.
 
 ## Concurrency
 As a quick overview of how concurrency is used to speed up
@@ -44,18 +45,16 @@ waiting involved, it wouldn't benefit us to do things concurrently.
 
 ### Mental model
 The question now is: what does this look like in computers and when
-does this happen? Most of us understand that computers have a CPU
-which is at the heart of the processing in the machine. What's less
-understood is that the CPU needs to coordinate itself with other
-peripheral IO "devices" such as the network card or hard drive in
-system. Moreover, each of these "devices" do their own internal
-independent processing prior to passing or upon receiving data from
-the CPU. Therefore, it is a more accurate to think of computers as a
-distributed systems in itself. This concept is key because it maps
-nicely into the explanation of when waiting happens. Every time a CPU
-interacts with it's peripheral "devices", it is making a request to an
-external system and has to wait for data to flow to or from these
-device subsystems.
+does this happen? Most of us understand that computers have a CPU which is at
+the heart of the processing in the machine. What's less understood is that the
+CPU needs to coordinate itself with other peripheral IO "devices" such as the
+network card or hard drive in system. Moreover, each of these "devices" do
+their own internal independent processing prior to passing or upon receiving
+data from the CPU. Therefore, it is a more accurate to think of computers as
+a distributed systems in itself. This concept is key because it maps nicely
+into the explanation of when waiting happens. Every time a CPU interacts with
+it's peripheral "devices", it is making a request to an external system and has
+to wait for data to flow to or from these device subsystems.
 
 That was the view from physical hardware. In software, programs don't
 interact directly with devices. Instead, they make IO requests through
@@ -77,9 +76,9 @@ completed and then do whatever post processing it needed. In short,
 non-blocking syscalls is the core mechanism which enables programs to
 express "do something else in the meantime".
 
-### Eio
+### eio
 With this foundation, we can now come around and address some of what
-goes into an IO concurrency library. At it's core, Eio is built on top
+goes into an IO concurrency library. At it's core, eio is built on top
 of non-blocking syscalls to ensure that the program doesn't get
 suspended while waiting on IO. This is combined with OCaml5's new
 language feature - Fiber's, which allows you to programmatically
@@ -87,10 +86,6 @@ express independent tasks. Finally, tying the two together, a
 scheduler organizes the Fibers to run, scheduling them in and out
 depending on if the Fiber has to wait for some IO or if IO has been
 completed.
-
-```
-   Eio also goes above and beyond by providing structured concurrency using lambda calculus as well as compatibility between other concurrency libraries like Async & Lwt.
-```
 
 ## The Problem
 With the stage set, let's see an actual program that can be sped up
@@ -112,15 +107,15 @@ could initiate writing to file B.
 
 #### Hardware
 Next, to get some throughput expectations, the actual hardware of my
-system is a Quad-core Intel i7-7600U 2.8GHz with an Intel SSD 6000p,
-512GB. The advertised transfer rate of the SSD is roughly 430 MB/s.
+system is a Quad-core Intel i7-7600U 2.8GHz with an Intel SSD 6000p, 512GB. The
+advertised transfer rate of the SSD is roughly **430 MB/s**.
 
 #### Measuring sequential throughput with dd
 To see if those numbers provided by the manufacturer are reproducible
 on my machine, I used the `dd` command to measure the throughput of
-sequential writes. Writing 1GB of data to disk measured 490 MB/s. It's
-odd that the value we observe is higher but it's within the ballpark
-so we'll take it as it is for now.
+sequential writes. ![dd_result](/assets/img/dd_result.jpg) Writing 1GB of
+data to disk measured **490 MB/s**. It's odd that the value we observe is
+higher but it's within the ballpark so we'll take it as it is for now.
 
 #### Workload expectations
 The previous two measurements are sequential, meaning that the data to
@@ -134,12 +129,18 @@ sparsely on disk. Thus, in order to get something closer to our
 workload, I simply timed the system's `cp -r` command on the following
 input:
 
-Directory depth: 5 Files per directory: 7 Filesize: 4k Total size of
-directory (including the subdirectory files): 480MB Total IO size (R +
-W) = 960MB Total time to completion = 3.110s
+```
+Directory depth: 5
+Files per directory: 7
+Filesize: 4k
+Total size of directory (including the subdirectory files): 480MB 
+Total IO size (R + W) = 960MB 
+Total time to completion:
+```
+![cp_r_4k_large_dir](/assets/img/cp_r_4k_large_dir.png)
 
-Our estimated throughput for `cp -r` is therefore `960MB / 3.110s =
-~308MB/s`. As expected we are slower, but not just because of the
+Our estimated throughput for `cp -r` is therefore `960MB / 3.045s =
+~315MB/s`. As expected we are slower, but not just because of the
 reasons stated above. The recursive copy also has to walk through the
 directory tree structure incurring extra fees from other system calls
 such as opening and creating files & directories along the way. The
@@ -148,26 +149,51 @@ file. That said, `dd` is useful just to give us a fairly good estimate
 on what the upper limit is.
 
 #### Can we do better?
-Peering into how`cp` is implementation, it doesn't employ any
+Peering into how `cp` is implementation, it doesn't employ any
 concurrency and just performs a sequential walk through the directory
 using a blocking syscalls. So in theory, we should be able to design a
 faster concurrent version of the algorithm.
 
-### Cp implemented with Eio
+### Cp implemented with eio
 Now returning back to reimplementing copy with eio, let's look at the
 following algorithm.
 
 ```ocaml
-kentookura's version
+open Eio
+
+let ( / ) = Eio.Path.( / )
+
+let copy src dst =
+  let rec dfs ~src ~dst =
+    let stat = Path.stat ~follow:false src in
+    match stat.kind with
+    | `Directory ->
+      Path.mkdir ~perm:stat.perm dst;
+      let files = Path.read_dir src in
+      List.iter (fun basename -> dfs ~src:(src / basename) ~dst:(dst / basename)) files
+    | `Regular_file ->
+      Path.with_open_in src @@ fun source ->
+      Path.with_open_out ~create:(`Exclusive stat.perm) dst @@ fun sink ->
+      Flow.copy source sink;
+    | _ -> failwith "file type error"
+    in
+  dfs ~src ~dst
+
+let () =
+  Eio_linux.run (fun env -> 
+      let cwd = Eio.Stdenv.cwd env in
+      let src = cwd / Sys.argv.(1) in
+      let dst = cwd / Sys.argv.(2) in
+      copy src dst)
 ```
 
 The above implementation is a minimal sequential version of `cp -r`
-using Eio's API's. However, right now we don't expect to do better. In
-fact, the benchmarks show that the eio's sequential implementation
-takes 8.8 seconds to complete, the throughput is only 109MB/s. 3 times
+using eio's API's. However, right now we don't expect to do better. In
+fact, the benchmarks show that the eio's sequential implementation takes
+**8.8** seconds to complete, the throughput is only **109MB/s**. 3 times
 slower than the original `cp`. We will rack up this overhead to being
-because of the cost of the scheduler and coordinating non-blocking IO
-in a sequential manner for now.
+because of the cost of the scheduler and coordinating non-blocking IO in
+a sequential manner for now.
 
 To make this program concurrent, the simple change of spawning fibers
 to handle each file to copy is enough. It should be mentioned that the
@@ -185,8 +211,8 @@ we are copying is big enough. Seeing that the limit is 1024 open file
 descriptors, it's therefore neccessary to throttle the number of
 fibers we spawn.
 
-For the sake of simplicity, let's decide to spawn only 2 fibers each
-time we encounter a new directory. Our new algorithm just adds this
+For the sake of simplicity, let's be conservative and spawn only 2 fibers
+every time we encounter a new directory. Our new algorithm just adds this
 change
 
 ```diff
@@ -199,40 +225,41 @@ Using the hyperfine command-line benchmarking tool, and on the same
 workload:
 
 ### Benchmark 1
-cp -r: Time to completion: 3.118 s (mean)
+Using the same workload as above,
 
-eio cp -r: Time to completion: 5.814 s (mean)
+![Benchmark1](/assets/img/eio_cp_r_4k_large_dir.png)
 
 We were expecting a speedup here but that’s not exactly what we
 observe. Thinking for a moment, our guess is that the cost of each IO
-could be so cheap that the blocking and waiting on IO is cheaper than
-the overhead of spawning a new fiber to handle IO concurrently. In
-that case, let's try increasing the file sizes to 1MB
+could be so cheap that the overhead of spawning a new fiber to handle IO
+concurrently overshadows. In that case, let's try increasing the file sizes to
+**1MB**
 
 ### Benchmark 2
-Our new test directory has the following properties: Directory depth:
-5 Files per directory: 4 Filesize: 1MB Total size of directory
-(including the subdirectory files): 780MB Total IO size (R + W) =
-1560MB Total time to completion =
+Our new test directory has the following properties: 
+```
+Directory depth: 5 
+Files per directory: 4 
+Filesize: 1MB 
+Total size of directory (including the subdirectory files): 780MB 
+Total IO size (R + W) = 1560MB
+```
+![Benchmark2](/assets/img/benchmark_2.png)
 
-cp -r: Time to completion: ...
+Unfortunately, we're still performing worse than the regular copy but
+relatively better compared to the first benchmark run. Now we are doing 1.4x
+slower versus 1.6x slower relative to system copy. This is strange, which means
+it's time to bring out a tracer to see what's going on. `eio` provides
+a separate tool `eio-trace` which gives you a visualization of the concurrency
+in the program. The trace produces
 
-eio cp -r: Time to complettion: ...
-
-Unfortunately, we're still performing worse than the regular copy and
-relatively even worse compared to the first benchmark run. Now we are
-doing ___ x worse versus 2x worse relative to system copy. This is
-strange, it's time to bring out a tracer to see what's going on. `eio`
-provides a separate tool `eio-trace` which gives you a visualization
-of the concurrency in the program. The trace produces
-
-(insert image here)
+![eio-trace](/assets/img/eio-trace.png)
 
 What's going on here? It looks like for every copy, there's a long
 read/write loop. Digging into the eio codebase, it looks like it
 selects the default buffer size for each copy to be 4096. This
 explains why copying a large file requires so many reads and
-writes. Eio supports different backends that provide it's low-level
+writes. eio supports different backends that provide it's low-level
 non-blocking API's. When using `Eio_main.run` function to instrument
 the scheduler environment, it selects the most appropriate backend
 depending on your system. In my case, it uses the linux backend, which
@@ -252,30 +279,34 @@ val run :
 ```
 
 The main one of interest is `?block_size`. Basically, this allows us
-to configure the Eio runtime to use buffers of custom sizes for IO. In
-our case, let's increase this to 1MB and see how this affects
-performance.  Our new main function looks like this:
+to configure the eio runtime to use buffers of custom sizes for IO. In our
+case, let's increase this to **1MB** and see how this affects performance. Our
+new main function looks like this:
 
 ```ocaml
 let () =
-  Eio_linux.run ~block_size (fun env ->
+  Eio_linux.run ~block_size:1000000 (fun env ->
     ...
     copy src dst
   )
 ```
 
 ### Benchmark 3
-eio_cp -r: ___
+![Benchmark3](/assets/img/benchmark_3.png)
 
 Finally, a configuration and workload where the concurrent version
 gets better performance! Huzzah!
 
-## Conclusion
-If anything, I hope you can see that the destination we've arrived at
-is the well-loved "it depends". The problem I've presented
-demonstrates that even with opportunities for concurrency, it doesn't
-just work out of the box. You need to empathize with the problem and
-understand the workload in order to correctly tune your program to
-benefit from the concurrency. If not, you could be paying more for it.
+## Conclusion 
+If anything, I hope you can see that the destination we've
+arrived at is the classic "it depends". The problem I've presented demonstrates
+that even with opportunities for concurrency, it isn't going to be
+immediately helpful. You'll still need to empathize with the problem and
+understand the workload in order to correctly tune your program to benefit
+from the concurrency. If not, you could end up paying more for it.
 
-As per the title, this was an introduction to using concurrency with eio. I've waved my hands a lot and hidden a lot of details. The next one will be a deep dive into other considerations that arise when you understand the actual machinery behind calling an IO function with eio and the data making it onto disk.
+This was an introduction to using concurrency with eio.
+I've waved my hands a lot and hidden a lot of details. The next post will
+be a deep dive into a bunch more considerations that arise when you peer
+behind the curtain and see the actual machinery behind calling an IO
+function with eio and the data making it onto disk.

@@ -2,11 +2,9 @@
 layout: post
 title: Efficient concurrency through eio
 cover-pic: "/assets/img/eio-cover.png"
-date: 2024-07-24 16:50 +0800
 prerequisites: OCaml
 toc: true
 ---
-
 Getting concurrency right is often tricky. Recently, I've been playing
 around with **eio**, an IO concurrency library for OCaml. In particular, I've
 been trying to optimize a recursive directory copy algorithm, hoping to use
@@ -199,19 +197,17 @@ a sequential manner for now.
 
 To make this program concurrent, the simple change of spawning fibers
 to handle each file to copy is enough. It should be mentioned that the
-number of fibers spawned need to be capped for 2 reasons. The first is
-that fibers simulate their stacks on the heap and thus extra memory
-space is incurred when more fibers are used. Secondly, there is a
-limit on the number of open file descriptors a process is allowed to
-have open. Looking at this program, it is implemented with DFS, in
-either branch, it will minimally have the file descriptor of it's
-current directory open as well as all it's parent directories. Each
-branch will additionally open 1 or 2 file descriptors. As such if we
-were to spawn fibers without much thought, the number of file
-descriptors opened at one time can grow quite large if our filesystem
-we are copying is big enough. Seeing that the limit is 1024 open file
-descriptors, it's therefore neccessary to throttle the number of
-fibers we spawn.
+number of fibers spawned need to be capped for 2 reasons. The first is that
+fibers have their own contexts and thus extra memory space is incurred when
+more fibers are used. Secondly, there is a limit on the number of open file
+descriptors a process is allowed to have open. Looking at this program, it is
+implemented with DFS, in either branch, it will minimally have the file
+descriptor of it's current directory open as well as all it's parent
+directories. Each branch will additionally open 1 or 2 file descriptors. As
+such if we were to spawn fibers without much thought, the number of file
+descriptors opened at one time can grow quite large if our filesystem we are
+copying is big enough. Seeing that the limit is 1024 open file descriptors,
+it's therefore neccessary to throttle the number of fibers we spawn.
 
 For the sake of simplicity, let's be conservative and spawn only 2 fibers
 every time we encounter a new directory. Our new algorithm just adds this

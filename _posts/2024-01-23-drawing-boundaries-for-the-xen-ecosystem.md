@@ -5,6 +5,7 @@ date: 2024-01-23 13:01 +0800
 cover-pic: "/assets/img/xen.png"
 prerequisites: Hypervisor
 tags:
+toc: true
 ---
 The Xen ecosystem is quite ironic. It's main product is hypervisor
 that cleanly separates hardware resources. However, when it comes to

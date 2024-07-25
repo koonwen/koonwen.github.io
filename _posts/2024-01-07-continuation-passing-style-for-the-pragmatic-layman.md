@@ -4,6 +4,7 @@ title: Continuation-Passing-Style for the pragmatic layman
 cover-pic: "/assets/img/cps-cover.jpg"
 date: 2024-01-07 16:47 +0800
 prerequisites: OCaml | Tail-recursion
+toc : true
 ---
 I've always found continuation-passing-style (CPS) one of the more an
 elusive concept to grasp. Today I came across a simple tree traversal

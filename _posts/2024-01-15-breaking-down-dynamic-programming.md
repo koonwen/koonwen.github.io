@@ -5,6 +5,7 @@ cover-pic: "/assets/img/greedy-cover.jpg"
 prerequisites: Python
 tags:
 date: 2024-01-15 23:22 +0800
+toc: true
 ---
 Dynamic-Programming (DP) is one of those things that makes my brain
 overheat. To a first approximation, DP is an algorithmic trick that

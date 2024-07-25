@@ -4,6 +4,7 @@ title: Disciplined indexing with Binary-search
 date: 2024-01-18 20:33 +0800
 cover-pic: "/assets/img/bin-search-cover.jpg"
 prerequisites: Python | Binary Search
+toc: true
 ---
 The topic for today's article was churned up out of frustration thanks
 to the classic "off-by-one" error. The especially annoying thing is

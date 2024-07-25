@@ -4,7 +4,9 @@ title: Efficient concurrency through eio
 cover-pic: "/assets/img/eio-cover.png"
 date: 2024-07-24 16:50 +0800
 prerequisites: OCaml
+toc: true
 ---
+
 Getting concurrency right is often tricky. Recently, I've been playing
 around with **eio**, an IO concurrency library for OCaml. In particular, I've
 been trying to optimize a recursive directory copy algorithm, hoping to use
@@ -113,7 +115,7 @@ advertised transfer rate of the SSD is roughly **430 MB/s**.
 #### Measuring sequential throughput with dd
 To see if those numbers provided by the manufacturer are reproducible
 on my machine, I used the `dd` command to measure the throughput of
-sequential writes. ![dd_result](/assets/img/dd_result.jpg) Writing 1GB of
+sequential writes. ![dd_result](/assets/img/dd_result.png) Writing 1GB of
 data to disk measured **490 MB/s**. It's odd that the value we observe is
 higher but it's within the ballpark so we'll take it as it is for now.
 
@@ -133,8 +135,8 @@ input:
 Directory depth: 5
 Files per directory: 7
 Filesize: 4k
-Total size of directory (including the subdirectory files): 480MB 
-Total IO size (R + W) = 960MB 
+Total size of directory (including the subdirectory files): 480MB
+Total IO size (R + W) = 960MB
 Total time to completion:
 ```
 ![cp_r_4k_large_dir](/assets/img/cp_r_4k_large_dir.png)
@@ -180,7 +182,7 @@ let copy src dst =
   dfs ~src ~dst
 
 let () =
-  Eio_linux.run (fun env -> 
+  Eio_linux.run (fun env ->
       let cwd = Eio.Stdenv.cwd env in
       let src = cwd / Sys.argv.(1) in
       let dst = cwd / Sys.argv.(2) in
@@ -236,12 +238,12 @@ concurrently overshadows. In that case, let's try increasing the file sizes to
 **1MB**
 
 ### Benchmark 2
-Our new test directory has the following properties: 
+Our new test directory has the following properties:
 ```
-Directory depth: 5 
-Files per directory: 4 
-Filesize: 1MB 
-Total size of directory (including the subdirectory files): 780MB 
+Directory depth: 5
+Files per directory: 4
+Filesize: 1MB
+Total size of directory (including the subdirectory files): 780MB
 Total IO size (R + W) = 1560MB
 ```
 ![Benchmark2](/assets/img/benchmark_2.png)
@@ -297,7 +299,7 @@ let () =
 Finally, a configuration and workload where the concurrent version
 gets better performance! Huzzah!
 
-## Conclusion 
+## Conclusion
 If anything, I hope you can see that the destination we've
 arrived at is the classic "it depends". The problem I've presented demonstrates
 that even with opportunities for concurrency, it isn't going to be

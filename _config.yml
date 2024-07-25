@@ -71,6 +71,7 @@ plugins:
  - jekyll-icon-list
  - jekyll-compose
  - jekyll-inline-svg
+ - jekyll-toc
 
 jekyll_compose:
   default_front_matter:
@@ -78,10 +79,12 @@ jekyll_compose:
       cover-pic:
       prerequisites:
       tags:
+      toc: true
     posts:
       cover-pic:
       prerequisites:
       tags:
+      toc: true
 
 defaults:
   -
@@ -105,5 +108,13 @@ icon_list:
 
 svg:
   optimize: true # Tells svg-inliner to clean up your SVGs.
+
+# TOC Settings
+toc:
+  min_level: 1
+  max_level: 3
+  list_class: toc
+  list_class: toc__list
+  sublist_class: toc__sublist
 
 google_analytics: UA-NNNNNNNN-N

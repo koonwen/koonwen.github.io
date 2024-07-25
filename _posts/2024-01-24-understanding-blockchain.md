@@ -5,6 +5,7 @@ cover-pic: "/assets/img/blockchain.png"
 prerequisites:
 tags:
 date: 2024-01-24 11:50 +0800
+toc: true
 ---
 I've recently started reading about blockchain. To consolidate my
 understanding, I've put together an executive summary about what this

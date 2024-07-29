@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Understanding blockchain | (core dumped)</title>
+<meta name="generator" content="Jekyll v3.9.5" />
+<meta property="og:title" content="Understanding blockchain" />
+<meta name="author" content="Koon Wen Lee" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="I’ve recently started reading about blockchain. To consolidate my understanding, I’ve put together an executive summary about what this technology is all about." />
+<meta property="og:description" content="I’ve recently started reading about blockchain. To consolidate my understanding, I’ve put together an executive summary about what this technology is all about." />
+<link rel="canonical" href="https://koonwen.github.io/2024/01/24/understanding-blockchain.html" />
+<meta property="og:url" content="https://koonwen.github.io/2024/01/24/understanding-blockchain.html" />
+<meta property="og:site_name" content="(core dumped)" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-01-24T03:50:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Understanding blockchain" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Koon Wen Lee"},"dateModified":"2024-01-24T03:50:00+00:00","datePublished":"2024-01-24T03:50:00+00:00","description":"I’ve recently started reading about blockchain. To consolidate my understanding, I’ve put together an executive summary about what this technology is all about.","headline":"Understanding blockchain","mainEntityOfPage":{"@type":"WebPage","@id":"https://koonwen.github.io/2024/01/24/understanding-blockchain.html"},"url":"https://koonwen.github.io/2024/01/24/understanding-blockchain.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="https://koonwen.github.io/feed.xml" title="(core dumped)" /><script>
+if(!(window.doNotTrack === "1" || navigator.doNotTrack === "1" || navigator.doNotTrack === "yes" || navigator.msDoNotTrack === "1")) {
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-NNNNNNNN-N', 'auto');
+  ga('send', 'pageview');
+}
+</script>
+  
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">(core dumped)</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/blog">Blog</a><a class="page-link" href="/projects">Projects</a><a class="page-link" href="/resume">Resume</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+    <header class="post-header">
+        <h1 class="post-title p-name" itemprop="name headline">Understanding blockchain</h1>
+        <p class="post-meta">
+            <time class="dt-published" datetime="2024-01-24T03:50:00+00:00" itemprop="datePublished">Jan 24, 2024
+            </time></p>
+    </header>
+
+    
+    <img class="img-fluid" src="/assets/img/blockchain.png" alt="Cover photo">
+    
+
+    <div class="post-content e-content" itemprop="articleBody">
+        <h1> — </h1>
+	<ul id="toc" class="toc__list">
+<li class="toc-entry toc-h2"><a href="#the-problem">The Problem</a></li>
+<li class="toc-entry toc-h2"><a href="#overview-by-example">Overview by example</a>
+<ul class="toc__sublist">
+<li class="toc-entry toc-h3"><a href="#forward">Forward</a></li>
+<li class="toc-entry toc-h3"><a href="#how-do-we-secure-transactions">How do we secure transactions?</a></li>
+<li class="toc-entry toc-h3"><a href="#how-do-we-verify-transactions">How do we verify transactions?</a></li>
+<li class="toc-entry toc-h3"><a href="#how-do-we-get-people-to-take-part">How do we get people to take part?</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#conclusion">Conclusion</a></li>
+</ul>
+        <p>I’ve recently started reading about blockchain. To consolidate my
+understanding, I’ve put together an executive summary about what this
+technology is all about.</p>
+
+<h2 id="the-problem">The Problem</h2>
+<p>As always, we should start with the motivation for the technology. Do
+we trust banks as middlemen for our purchases? Even if we do, it comes
+back to that age old adage that we “shouldn’t place all our eggs in
+one basket”. what should happen if that central authority goes down?
+Now to rephrase the question more generally: can we have a trust-less
+service that allows us to exchange value?  Initially, this seems like
+an obvious contradiction because the whole point of the service is to
+act as a trusted third-party in the transaction. With blockchain
+however, we answer the question in the affirmative.</p>
+
+<h2 id="overview-by-example">Overview by example</h2>
+<p>Before diving into the technical under-workings of blockchain, it pays
+to get a general sense of what it is based on. Let’s say Alice and Bob
+are performing an exchange. Alice hands Bob $10 and now Alice is now
+$10 poorer and Bob is $10 richer. No trust is required because the
+money was physically handed over. This is not how we usually make
+transactions in the modern day though. Today we have banks that keep
+track of how much we own and perform the transaction by deducting or
+adding to our balance. So if Alice transfers Bob $10, Alice balance
+sheet gets reduced by $10 and Bob increases by $10, no physical money
+needs to exchange hands. That’s simple enough. The problem with this
+is that now we need to trust that the bank records this correctly and
+doesn’t make a blunder in updating the records (And all other worries
+we have about trusting central authorities). This type of transaction
+is akin to if Alice and Bob had a friend Charles that keeps track of
+who owes who. In this case Alice owes Bob $10. This is problematic if
+Charles mistakes the amount that was owed, worse still he may be
+biased to his good friend Alice.</p>
+
+<p>Now enter the third option, Alice, Bob and Charles live in a small
+town of about 100 people. Instead of having only Charles keep track of
+the exchange, what if everyone in the town helped out by individually
+keeping track of the transaction. In such a case, we no longer have to
+have to rely on Charles as a fair and trustworthy third-party. We can
+spread our trust amongst the other 97 people in the town. If a dispute
+where to happen, we can rely on the majority to validate the
+transaction details. This is the premise of blockchain, a way to
+distribute the responsibility of book-keeping. Of course, whilst this
+is ideal, it has multiple problems.</p>
+
+<ul>
+  <li>How do we secure transactions?</li>
+  <li>How do we verify a transaction occurred?</li>
+  <li>
+    <p>How do we get people to take part?</p>
+  </li>
+  <li>How do we prevent people from requesting a transaction when they have insufficient funds?</li>
+  <li>How do we agree on an order of transactions since everyone is bound to receive them in different orders?</li>
+</ul>
+
+<p>The first three are the meat of blockchain technology and can be
+described fairly generically. I will tackle those here. The last two
+will be addressed in later posts discussing specific types of
+blockchains.</p>
+
+<h3 id="forward">Forward</h3>
+<p>What I initially confused when learning about blockchain was the
+process of securing a transaction and verifying that a transaction
+occurred. To give the general idea, securing a transaction is about
+knowing who currently owns the money. Verifying a transaction is then
+the process of adding it to the public transaction log to confirms the
+exchange of ownership of the money. To put it in less technical terms,
+securing a transaction would be as though Alice signs her name that
+she approves a transaction to Bob for $10. Verifying this transaction
+would be to actually upgrade this local agreement to the global ledger
+such that the transaction is visible to everyone.</p>
+
+<h3 id="how-do-we-secure-transactions">How do we secure transactions?</h3>
+<p>In the physical world, it suffices to say that if the money is
+physically in my possession, it is mine (unless I’ve stolen it of
+course). However, when dealing with digital currency, ownership is not
+so straightforward. It turns out that the way to keep track of
+ownership is by keeping a log of the history of transactions. You
+could think of this as if we had to write down the name of the person
+we were giving the money to before we pass it to them. To make this
+chain secure so that only the people who own the money can spend it,
+the transaction log is a trail of <strong>cryptographically</strong> secure
+signatures of the people who previously owned it until it’s current
+owner. Cryptography in this sense, is used to make stealing or
+masquerading as someone else computationally infeasible.</p>
+
+<p>The technical term for this is called <strong>Asymmetric cryptography (Or
+public key cryptography)</strong>. At a high level, this works by each user
+have a pair of keys. A public one and a private one. The public one is
+available to other users whilst the private one is kept a secret only
+to the user. These pair of keys have a unique feature to them which is
+that they can be used to digitally sign a message and make it close to
+impossible to forge. Procedurally, signing and verifying looks like
+the following:</p>
+
+<div class="language-text highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Sign(Message, private_key) =&gt; Signature
+
+Verify(Message, Signature, public_key) =&gt; True/False
+</code></pre></div></div>
+
+<p>As mentioned, the important feature of this encryption process is that
+it is there is no known way to reverse-engineer it. Knowing how the
+algorithm works doesn’t allow one to discover the private
+key. Furthermore, a slight change in the message contents, causes
+wildly different signature so there’s no relationship/pattern we can
+use to generate a valid signature other than guessing and checking.</p>
+
+<p>Hence we arrive at the term cryptocurrency. We can now see where and
+why cryptography is applied to the digital currency.</p>
+
+<h3 id="how-do-we-verify-transactions">How do we verify transactions?</h3>
+<p>After a secure transaction is broadcasted, it ends up in a pool of
+“pending transactions”. At this time, we introduce other actors in the
+system known as “miners”. In our example, the minors are analogous to
+anyone in the town. The job of the miner is to pick up these
+transactions and then validate them so that they end up on the public
+ledger. For this process to occur, miners must first complete a
+computational “challenge/puzzle”. Upon completion, it awards them a
+prize and the ability to append a new block (some set of pending
+transactions) onto the chain. It should be noted that appending a
+block onto the chain doesn’t yet guarantee permanence or legitimacy of
+the action. Instead, nodes work on the policy of following the longest
+chain. This means that even if a bad actor were to successfully solve
+the challenge before other nodes, it would only be able to append a
+single block. To keep up with it’s scam, it would have to continuously
+outperform the rest of the miners to have it’s chain become
+validated. Unless the bad actor has the computational power of more
+than 50% of the system, it is proven that it is computationally
+infeasible for a bad actor to invalidate the system.</p>
+
+<h3 id="how-do-we-get-people-to-take-part">How do we get people to take part?</h3>
+<p>A vital part to a functioning blockchain is that there are a
+distributed set of machines called “nodes” that are working to
+validate transactions. Similar to how we have people in the town
+actively keeping track of transactions that happen. To reward the
+nodes, a node is given with a small amount of the
+cryptocurrencies. This keeps people/businesses incentivized to run
+their nodes participating in the exchange. On top of that, some
+transaction even offer transaction fees that goes to the nodes (known
+as miners) that successfully validate their transaction.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+<p>To come full circle, given my understanding of blockchain works, I
+don’t think it’s accurate to say that it’s trust-less. I think it is
+trust-less in so far as we think of it as having no central
+authority. It still remains the fact that we need to have trust in the
+<strong>majority</strong> of actors in the system.  I suppose the answer is still
+fairly clear that it’s better to place our bets on the majority rather
+than a single entity, no matter how trustworthy.</p>
+
+    </div><a class="u-url" href="/2024/01/24/understanding-blockchain.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+    <data class="u-url" href="/"></data>
+
+    <div class="wrapper">
+
+        <!-- <h2 class="footer-heading">(core dumped)</h2> -->
+
+        <div class="footer-col-wrapper">
+            <div class="footer-col footer-col-1">
+                <ul class="contact-list">
+                    <li class="p-name">Koon Wen Lee</li><li><a class="u-email" href="mailto:%6B%6F%6F%6E%77%65%6E@%67%6D%61%69%6C.%63%6F%6D">koonwen@gmail.com</a></li></ul>
+            </div>
+
+            <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/koonwen"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">koonwen</span></a></li><li><a href="https://www.linkedin.com/in/koonwen-lee-b349b1175"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#linkedin"></use></svg> <span class="username">koonwen-lee-b349b1175</span></a></li><li><a href="https://www.twitter.com/koonwen"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">koonwen</span></a></li><li><a href="/feed.xml"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#rss"></use></svg> <span>rss</span></a></li></ul>
+</div>
+
+            <div class="footer-col footer-col-3">
+                <p>Portfolio and Blog
+</p>
+            </div>
+        </div>
+
+    </div>
+
+</footer>
+</body>
+
+</html>

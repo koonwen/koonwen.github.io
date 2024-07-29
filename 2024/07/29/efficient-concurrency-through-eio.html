@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Efficient Disk concurrency through eio | (core dumped)</title>
+<meta name="generator" content="Jekyll v3.9.5" />
+<meta property="og:title" content="Efficient Disk concurrency through eio" />
+<meta name="author" content="Koon Wen Lee" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Getting concurrency right is often tricky. Recently, I’ve been playing around with eio, an IO concurrency library for OCaml. In particular, I was inspired by a discussion post asking how to implement an efficient directory copy using eio. The post attracted many suggestions and I was curious to understand which optimizations benefits eio the most. Turns out, this problem was a one-way ticket down the rabbit hole… Here’s how it went!" />
+<meta property="og:description" content="Getting concurrency right is often tricky. Recently, I’ve been playing around with eio, an IO concurrency library for OCaml. In particular, I was inspired by a discussion post asking how to implement an efficient directory copy using eio. The post attracted many suggestions and I was curious to understand which optimizations benefits eio the most. Turns out, this problem was a one-way ticket down the rabbit hole… Here’s how it went!" />
+<link rel="canonical" href="https://koonwen.github.io/2024/07/29/efficient-concurrency-through-eio.html" />
+<meta property="og:url" content="https://koonwen.github.io/2024/07/29/efficient-concurrency-through-eio.html" />
+<meta property="og:site_name" content="(core dumped)" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-07-29T01:02:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Efficient Disk concurrency through eio" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Koon Wen Lee"},"dateModified":"2024-07-29T01:02:00+00:00","datePublished":"2024-07-29T01:02:00+00:00","description":"Getting concurrency right is often tricky. Recently, I’ve been playing around with eio, an IO concurrency library for OCaml. In particular, I was inspired by a discussion post asking how to implement an efficient directory copy using eio. The post attracted many suggestions and I was curious to understand which optimizations benefits eio the most. Turns out, this problem was a one-way ticket down the rabbit hole… Here’s how it went!","headline":"Efficient Disk concurrency through eio","mainEntityOfPage":{"@type":"WebPage","@id":"https://koonwen.github.io/2024/07/29/efficient-concurrency-through-eio.html"},"url":"https://koonwen.github.io/2024/07/29/efficient-concurrency-through-eio.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="https://koonwen.github.io/feed.xml" title="(core dumped)" /><script>
+if(!(window.doNotTrack === "1" || navigator.doNotTrack === "1" || navigator.doNotTrack === "yes" || navigator.msDoNotTrack === "1")) {
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-NNNNNNNN-N', 'auto');
+  ga('send', 'pageview');
+}
+</script>
+  
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">(core dumped)</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/blog">Blog</a><a class="page-link" href="/projects">Projects</a><a class="page-link" href="/resume">Resume</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+    <header class="post-header">
+        <h1 class="post-title p-name" itemprop="name headline">Efficient Disk concurrency through eio</h1>
+        <p class="post-meta">
+            <time class="dt-published" datetime="2024-07-29T01:02:00+00:00" itemprop="datePublished">Jul 29, 2024
+            </time></p>
+    </header>
+
+    
+    <img class="img-fluid" src="/assets/img/eio-cover.png" alt="Cover photo">
+    
+
+    <div class="post-content e-content" itemprop="articleBody">
+        <h5>Pre-requisite knowledge assumed: <strong> OCaml </strong></h5>
+        <h1> — </h1>
+	<ul id="toc" class="toc__list">
+<li class="toc-entry toc-h2"><a href="#concurrency">Concurrency</a>
+<ul class="toc__sublist">
+<li class="toc-entry toc-h3"><a href="#overview-of-backends-concurrency-models">Overview of backends concurrency models</a></li>
+<li class="toc-entry toc-h3"><a href="#eio">eio</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#gotchas">Gotchas!</a>
+<ul class="toc__sublist">
+<li class="toc-entry toc-h3"><a href="#write-not-as-slow-as-youd-think">write: not as slow as you’d think</a></li>
+<li class="toc-entry toc-h3"><a href="#read-faster-than-expected">read: faster than expected</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#baseline-expectations">Baseline Expectations</a>
+<ul class="toc__sublist">
+<li class="toc-entry toc-h3"><a href="#hardware-capabilities">Hardware Capabilities</a></li>
+<li class="toc-entry toc-h3"><a href="#measurements-with-fio">Measurements with fio</a></li>
+<li class="toc-entry toc-h3"><a href="#workload-expectations">Workload expectations</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#can-we-do-better">Can we do better?</a>
+<ul class="toc__sublist">
+<li class="toc-entry toc-h3"><a href="#copy-algorithm-in-eio">Copy algorithm in eio</a></li>
+<li class="toc-entry toc-h3"><a href="#copy-revised">Copy revised</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#results">Results</a>
+<ul class="toc__sublist">
+<li class="toc-entry toc-h3"><a href="#benchmark-1">Benchmark 1</a></li>
+<li class="toc-entry toc-h3"><a href="#benchmark-2">Benchmark 2</a></li>
+<li class="toc-entry toc-h3"><a href="#benchmark-3">Benchmark 3</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#conclusion">Conclusion</a></li>
+</ul>
+        <p>Getting concurrency right is often tricky. Recently, I’ve been playing
+around with <strong>eio</strong>, an IO concurrency library for OCaml. In particular,
+I was inspired by a <a href="https://discuss.ocaml.org/t/how-to-write-an-efficient-cp-r-clone-with-eio/14848">discussion post</a> asking how to implement an efficient directory copy using eio.
+The post attracted many suggestions and I was curious to understand which
+optimizations benefits eio the most. Turns out, this problem was
+a one-way ticket down the rabbit hole… Here’s how it went!</p>
+
+<h2 id="concurrency">Concurrency</h2>
+
+<p>To get our definitions straight, we’ll define concurrency
+as the structuring of a program into separate independent tasks. Each task
+runs one at a time but can be interleaved with one another. However, this
+overlapping structure doesn’t provide any speedup on it’s own. It needs to
+be paired with a workload that consists of some waiting on some slow
+device IO and other independent work that could be processed in the
+meantime. To give a concrete example, a concurrent way to write to two
+files to disk would be:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>t1: Write to file A
+t2: While waiting for write to A to complete ...  | Write to file B
+t3: While waiting for write to B to complete ...  | Writing to file A completes
+t4: Writing to file B completes
+</code></pre></div></div>
+
+<h3 id="overview-of-backends-concurrency-models">Overview of backends concurrency models</h3>
+
+<p>In order to enable concurrency, modern operating systems provide two
+asynchronous IO models to pick from: readiness-based IO and
+completion-based IO.</p>
+
+<p><strong>Readiness-based IO</strong>, is provided through the use of non-blocking file
+descriptors. Such descriptors respond in one of two ways when IO is requested
+on them. If data is ready to be consumed, then the request is processed as per
+usual. If data is not yet available, the request returns immediately with an
+error code to indicate this so that the process returns to check again later
+for data.</p>
+
+<p><strong>Completion-based IO</strong> in contrast, is accomplished by using specific
+asynchronous API’s which hand-off IO requests entirely to the OS and
+returns immediately. Internally, this typically involves requests being
+queued and monitored by an external kernel thread to process them in
+a separate execution context. Upon completion the data, the OS is
+responsible for notifying the requesting process.</p>
+
+<p>Recognizing when to use one or the other is subtle but worth thinking about.
+Primarily, readiness-based IO only guarantees that the program will not block
+on IO but have unpredictable latency. If not properly accounted for, programs
+could end up handling an arbritrary long requests on ready file descriptors,
+thus causing poor latency. On the other hand, completion-based IO is more
+predictable in this regard since requests are handled outside of the
+process execution. However this model generally has lower throughput since
+requests now have to be threaded through the OS.</p>
+
+<h3 id="eio">eio</h3>
+
+<p>The eio library exposes high-level structured concurrency constructs for
+programming with asynchronous IO. Eio’s main abstraction are Fiber’s which
+are programmatic way to express independent threads of work. Eio currently
+supports running on 3 systems, windows, posix and linux. In order to push
+performance as far as we can, we’ll focus on linux which is based on
+io-uring, a sophisticated and fast backend based on completion-based IO.</p>
+
+<h2 id="gotchas">Gotchas!</h2>
+
+<p>Before we can dive into any optimizations, here are some immediate gotchas
+to keep in mind.</p>
+
+<h3 id="write-not-as-slow-as-youd-think">write: not as slow as you’d think</h3>
+
+<p>Those with experience programming with non-blocking IO may have realized
+that we’re stepping into an exceptional case. Our copy directory problem
+works with regular files and the man pages for <code class="language-plaintext highlighter-rouge">open (2)</code> state:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>O_NONBLOCK or O_NDELAY
+“Note that this flag has no effect for regular files and block devices;
+that is, I/O operations will (briefly) block when device activity is
+required, regardless of whether O_NONBLOCK is set.”
+</code></pre></div></div>
+
+<p>Well, this seems like an obvious win for us at the completion based IO
+camp. However, this leaves out several important details. In particular,
+O_NONBLOCK doesn’t work for regular files because writes go directly to
+the page cache. Making many individual small requests for IO (in our case - to disk)
+is extremely expensive. To guard against this, kernel developers implement
+an efficient mechanism to transparently batch write’s into a bigger
+request that is later flushed to disk. The man pages for <code class="language-plaintext highlighter-rouge">write (2)</code>
+confirms this behaviour</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    A successful return from write() does not make any guarantee that
+    data has been committed to disk.  On some filesystems, including
+    NFS, it does not even guarantee that space has successfully been
+    reserved for the data.  In this case, some errors might be
+    delayed until a future write(), fsync(2), or even close(2).  The only
+    only way to be sure is to call fsync(2) after you are done
+    writing all your data.
+</code></pre></div></div>
+
+<p>As a consequence, a call to write does not suspend because it is readily able
+to write data into the page cache. Since our copy problem is not concerned with
+latency, issuing sequential writes end up being quite efficient because the
+program doesn’t need to wait. The only time a write may block is when there
+are no free pages left and dirty pages are flushed to disk to reclaim space.
+Though in practice, this behaviour is usually not an issue.</p>
+
+<p>All of this context was provided to now circle back to how io-uring
+handles this. As described, using completion-based IO to perform writes
+can be less performant than the sequential version because of the extra
+infrastructure required to handle queued requests. io-uring is designed to
+make smarter choices about IO and does not purely queue request. If uring
+notices that an IO operation can be completed immediately (e.g. write to
+a page cache), it will do so inline instead of generating an async request
+for it. Conversely, if a write needs to be suspended, it then adds it to
+the async queue. This hybrid architecture gives us the best of both worlds
+for regular file IO. If so desired, a uring request can be set to always
+generate an async request if low latency is required.</p>
+
+<p>This discussion is not complete without mentioning the implications on
+persistence. Having peered into the implementation, we now realize that
+the OS may lie to us about having written something to disk. For certain
+applications, this can be detail is important to have some gurantees about
+their programs semantics if a failure occurs. The way to ensure that
+a write has made it to disk is the call <code class="language-plaintext highlighter-rouge">fsync</code> which forces dirty pages
+to be written to disk. This may or may not be a required property of real
+programs so our benchmarks will consider both cases.</p>
+
+<h3 id="read-faster-than-expected">read: faster than expected</h3>
+
+<p>Following the discovery that regular files are blocking, surely reading
+files will be slow since there is no way around having to fetch data from
+disk. This is true, but the kernel has other tricks up it’s sleeve. When
+requesting data for files, the kernel performs a “readahead” optimization. As
+the name indicates, the kernel prefetches more data into main memory than the
+program had asked for. This way, future reads are more likely to hit cache
+rather of requiring a disk transfer at every read. Even better, some
+applications are designed to work with data read once into memory and are
+kept around to be reused directly from RAM. From a benchmarking
+perspective, we should also include this in our test using a hot and cold
+page cache.</p>
+
+<h2 id="baseline-expectations">Baseline Expectations</h2>
+
+<p>It’s useful to first get some idea of the theoretical throughput of the
+system.</p>
+
+<h3 id="hardware-capabilities">Hardware Capabilities</h3>
+
+<p>The disk on my machine is the Intel Pro 6000p NVMe PCIe M.2 512GB.
+I couldn’t find information about the transfer rates on the spec sheet so
+I used public benchmarks of random mixed read write transfers which came
+out as <strong>40.9 MB/s</strong>. <a href="https://ssd.userbenchmark.com/SpeedTest/289714/INTEL-SSDPEKKF512G7H">ref</a></p>
+
+<h3 id="measurements-with-fio">Measurements with fio</h3>
+
+<p>Now to check where we are at on my machine, I used the <code class="language-plaintext highlighter-rouge">fio</code> benchmarking
+tool to measure the throughput of random read writes.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  fio --name=expect_fsync+cold --rw=randrw --size=1GB --end_fsync=1 --invalidate=1
+</code></pre></div></div>
+
+<p><img src="/assets/img/fio_randrw_fsync+cold.png" alt="fio_randrw_fsync+cold" /></p>
+
+<p>It’s also worthwhile to simulate workloads that benefit from caching and
+doesn’t require hard guarantees on disk writes since some applications
+fall in this category.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  fio --name=expect --rw=randrw --size=1GB --pre_read=1
+</code></pre></div></div>
+
+<p><img src="/assets/img/fio_randrw.png" alt="fio_randrw" /></p>
+
+<h3 id="workload-expectations">Workload expectations</h3>
+
+<p>The above results measure the raw IO throughput to disk that will serve as
+our upper bound. We’ll now use <code class="language-plaintext highlighter-rouge">hyperfine</code> against the system <code class="language-plaintext highlighter-rouge">cp -r</code>
+command on a synthetic filesystem to get a baseline for the algorithm. The
+filesystem properties are:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Directory depth: 5
+Files per directory: 7
+Filesize: 4k
+Num files: 97655
+Total size of IO = 480MB (R) + 480 (W) = 960MB
+</code></pre></div></div>
+
+<p><img src="/assets/img/cp_r_4k_fsync+cold.png" alt="cp_r_4k_fsync+cold" /></p>
+
+<p><img src="/assets/img/cp_r_4k.png" alt="cp_r_4k" /></p>
+
+<p>Our estimated throughput for <code class="language-plaintext highlighter-rouge">cp -r</code> is therefore:</p>
+
+<p><strong>fsync+cold cache</strong>: 960MB / 30.421 = ~32MB/s</p>
+
+<p><strong>regular</strong>: 960MB / 2.910s = ~330MB/s</p>
+
+<p>We’re right around the ballpark of the results of the fio workload.</p>
+
+<h2 id="can-we-do-better">Can we do better?</h2>
+
+<p>Looking into how <code class="language-plaintext highlighter-rouge">cp</code> is implementation, it doesn’t employ any concurrency
+and just performs a sequential walk through the directory using a blocking
+syscalls. Remembering that read/writes are fast due to readahead and write
+buffering, we’d guess that the sequential version may do better than the
+concurrent version on workloads without “fsync + cold cache”. This is
+because in actuality it spends little time waiting. With that
+configuration on however, the sequential version starts suffers from long
+suspension and the concurrent one really shines</p>
+
+<h3 id="copy-algorithm-in-eio">Copy algorithm in eio</h3>
+
+<p>Let’s look at the following algorithm taken from that post</p>
+
+<div class="language-ocaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">open</span> <span class="nc">Eio</span>
+
+<span class="k">let</span> <span class="p">(</span> <span class="o">/</span> <span class="p">)</span> <span class="o">=</span> <span class="nn">Eio</span><span class="p">.</span><span class="nn">Path</span><span class="p">.(</span> <span class="o">/</span> <span class="p">)</span>
+
+<span class="k">let</span> <span class="n">copy</span> <span class="n">src</span> <span class="n">dst</span> <span class="o">=</span>
+  <span class="k">let</span> <span class="k">rec</span> <span class="n">dfs</span> <span class="o">~</span><span class="n">src</span> <span class="o">~</span><span class="n">dst</span> <span class="o">=</span>
+    <span class="k">let</span> <span class="n">stat</span> <span class="o">=</span> <span class="nn">Path</span><span class="p">.</span><span class="n">stat</span> <span class="o">~</span><span class="n">follow</span><span class="o">:</span><span class="bp">false</span> <span class="n">src</span> <span class="k">in</span>
+    <span class="k">match</span> <span class="n">stat</span><span class="o">.</span><span class="n">kind</span> <span class="k">with</span>
+    <span class="o">|</span> <span class="nt">`Directory</span> <span class="o">-&gt;</span>
+      <span class="nn">Path</span><span class="p">.</span><span class="n">mkdir</span> <span class="o">~</span><span class="n">perm</span><span class="o">:</span><span class="n">stat</span><span class="o">.</span><span class="n">perm</span> <span class="n">dst</span><span class="p">;</span>
+      <span class="k">let</span> <span class="n">files</span> <span class="o">=</span> <span class="nn">Path</span><span class="p">.</span><span class="n">read_dir</span> <span class="n">src</span> <span class="k">in</span>
+      <span class="nn">List</span><span class="p">.</span><span class="n">iter</span> <span class="p">(</span><span class="k">fun</span> <span class="n">basename</span> <span class="o">-&gt;</span> <span class="n">dfs</span> <span class="o">~</span><span class="n">src</span><span class="o">:</span><span class="p">(</span><span class="n">src</span> <span class="o">/</span> <span class="n">basename</span><span class="p">)</span> <span class="o">~</span><span class="n">dst</span><span class="o">:</span><span class="p">(</span><span class="n">dst</span> <span class="o">/</span> <span class="n">basename</span><span class="p">))</span> <span class="n">files</span>
+    <span class="o">|</span> <span class="nt">`Regular_file</span> <span class="o">-&gt;</span>
+      <span class="nn">Path</span><span class="p">.</span><span class="n">with_open_in</span> <span class="n">src</span> <span class="o">@@</span> <span class="k">fun</span> <span class="n">source</span> <span class="o">-&gt;</span>
+      <span class="nn">Path</span><span class="p">.</span><span class="n">with_open_out</span> <span class="o">~</span><span class="n">create</span><span class="o">:</span><span class="p">(</span><span class="nt">`Exclusive</span> <span class="n">stat</span><span class="o">.</span><span class="n">perm</span><span class="p">)</span> <span class="n">dst</span> <span class="o">@@</span> <span class="k">fun</span> <span class="n">sink</span> <span class="o">-&gt;</span>
+      <span class="nn">Flow</span><span class="p">.</span><span class="n">copy</span> <span class="n">source</span> <span class="n">sink</span><span class="p">;</span>
+    <span class="o">|</span> <span class="n">_</span> <span class="o">-&gt;</span> <span class="n">failwith</span> <span class="s2">"file type error"</span>
+    <span class="k">in</span>
+  <span class="n">dfs</span> <span class="o">~</span><span class="n">src</span> <span class="o">~</span><span class="n">dst</span>
+
+<span class="k">let</span> <span class="bp">()</span> <span class="o">=</span>
+  <span class="nn">Eio_linux</span><span class="p">.</span><span class="n">run</span> <span class="p">(</span><span class="k">fun</span> <span class="n">env</span> <span class="o">-&gt;</span>
+      <span class="k">let</span> <span class="n">cwd</span> <span class="o">=</span> <span class="nn">Eio</span><span class="p">.</span><span class="nn">Stdenv</span><span class="p">.</span><span class="n">cwd</span> <span class="n">env</span> <span class="k">in</span>
+      <span class="k">let</span> <span class="n">src</span> <span class="o">=</span> <span class="n">cwd</span> <span class="o">/</span> <span class="nn">Sys</span><span class="p">.</span><span class="n">argv</span><span class="o">.</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="k">in</span>
+      <span class="k">let</span> <span class="n">dst</span> <span class="o">=</span> <span class="n">cwd</span> <span class="o">/</span> <span class="nn">Sys</span><span class="p">.</span><span class="n">argv</span><span class="o">.</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="k">in</span>
+      <span class="n">copy</span> <span class="n">src</span> <span class="n">dst</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>The above implementation is a minimal sequential version of <code class="language-plaintext highlighter-rouge">cp -r</code> using
+eio’s API’s. However, right now we don’t expect to do better and in fact,
+a quick time shows that this implementation takes <strong>8.8</strong> seconds to
+complete, the throughput is only <strong>109MB/s</strong>. 3 times slower than the
+regular <code class="language-plaintext highlighter-rouge">cp</code>. We will rack up this extra overhead as the cost of running
+the concurrency infrastructure in a sequential manner for now.</p>
+
+<p>To make this program concurrent, the simple change would be to spawn new
+fibers to handle each file to copy.</p>
+
+<div class="language-diff highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gd">- List.iter (fun ...)
+</span><span class="gi">+ Fiber.List.iter ~max_fibers:2 (fun ...)
+</span></code></pre></div></div>
+
+<p>Though the problem with this method is that we have not much control on
+the total number of fibers spawned. This is problematic for two reasons.
+The first is that fibers have their own contexts and thus maintaining it
+is extra memory space. Secondly, there is a limit on the number of open
+file descriptors a process is allowed to have open. Looking at this
+program, it is implemented with DFS. If the filesystem we are attempting
+to copy is big enough, we could easily burst the limit on the number of
+open file descriptors. It’s therefore neccessary to throttle the number of
+fibers we spawn.</p>
+
+<h3 id="copy-revised">Copy revised</h3>
+
+<p>Our new version is structured using BFS in order to prevent holding file
+descriptors open during the recursion in DFS. Additionally, it also uses
+a semaphore to control the total number of fibers the program can spawn at
+any time.</p>
+
+<div class="language-ocaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">module</span> <span class="nc">Q</span> <span class="o">=</span> <span class="nn">Eio_utils</span><span class="p">.</span><span class="nc">Lf_queue</span>
+
+<span class="k">let</span> <span class="n">copy_bfs</span> <span class="n">src</span> <span class="n">dst</span> <span class="o">=</span>
+
+  <span class="k">let</span> <span class="n">sem</span> <span class="o">=</span> <span class="nn">Semaphore</span><span class="p">.</span><span class="n">make</span> <span class="mi">64</span> <span class="k">in</span>
+  <span class="k">let</span> <span class="n">q</span> <span class="o">=</span> <span class="nn">Q</span><span class="p">.</span><span class="n">create</span> <span class="bp">()</span> <span class="k">in</span>
+  <span class="nn">Q</span><span class="p">.</span><span class="n">push</span> <span class="n">q</span> <span class="p">(</span><span class="n">src</span><span class="o">,</span> <span class="n">dst</span><span class="p">);</span>
+
+  <span class="nn">Switch</span><span class="p">.</span><span class="n">run</span> <span class="o">@@</span> <span class="k">fun</span> <span class="n">sw</span> <span class="o">-&gt;</span>
+  <span class="k">while</span> <span class="n">not</span> <span class="p">(</span><span class="nn">Q</span><span class="p">.</span><span class="n">is_empty</span> <span class="n">q</span><span class="p">)</span> <span class="k">do</span>
+
+    <span class="k">match</span> <span class="nn">Q</span><span class="p">.</span><span class="n">pop</span> <span class="n">q</span> <span class="k">with</span>
+    <span class="o">|</span> <span class="nc">None</span> <span class="o">-&gt;</span> <span class="n">failwith</span> <span class="s2">"None in queue"</span>
+    <span class="o">|</span> <span class="nc">Some</span> <span class="p">(</span><span class="n">src_path</span><span class="o">,</span> <span class="n">dst_path</span><span class="p">)</span> <span class="o">-&gt;</span>
+      <span class="k">begin</span>
+        <span class="k">let</span> <span class="n">stat</span> <span class="o">=</span> <span class="nn">Path</span><span class="p">.</span><span class="n">stat</span> <span class="o">~</span><span class="n">follow</span><span class="o">:</span><span class="bp">false</span> <span class="n">src_path</span> <span class="k">in</span>
+        <span class="p">(</span><span class="k">match</span> <span class="n">stat</span><span class="o">.</span><span class="n">kind</span> <span class="k">with</span>
+         <span class="o">|</span> <span class="nt">`Directory</span> <span class="o">-&gt;</span>
+           <span class="nn">Path</span><span class="p">.</span><span class="n">mkdir</span> <span class="o">~</span><span class="n">perm</span><span class="o">:</span><span class="n">stat</span><span class="o">.</span><span class="n">perm</span> <span class="n">dst_path</span><span class="p">;</span>
+           <span class="k">let</span> <span class="n">files</span> <span class="o">=</span> <span class="nn">Path</span><span class="p">.</span><span class="n">read_dir</span> <span class="n">src_path</span> <span class="k">in</span>
+           <span class="c">(* Append files in found directory *)</span>
+           <span class="nn">List</span><span class="p">.</span><span class="n">iter</span> <span class="p">(</span><span class="k">fun</span> <span class="n">f</span> <span class="o">-&gt;</span> <span class="nn">Q</span><span class="p">.</span><span class="n">push</span> <span class="n">q</span> <span class="p">(</span><span class="n">src_path</span> <span class="o">/</span> <span class="n">f</span><span class="o">,</span> <span class="n">dst_path</span> <span class="o">/</span> <span class="n">f</span><span class="p">))</span> <span class="n">files</span>
+         <span class="o">|</span> <span class="nt">`Regular_file</span> <span class="o">-&gt;</span>
+           <span class="nn">Fiber</span><span class="p">.</span><span class="n">fork</span> <span class="o">~</span><span class="n">sw</span> <span class="p">(</span><span class="k">fun</span> <span class="bp">()</span> <span class="o">-&gt;</span>
+               <span class="nn">Semaphore</span><span class="p">.</span><span class="n">acquire</span> <span class="n">sem</span><span class="p">;</span>
+               <span class="nn">Path</span><span class="p">.</span><span class="n">with_open_in</span> <span class="n">src_path</span> <span class="o">@@</span> <span class="k">fun</span> <span class="n">source</span> <span class="o">-&gt;</span>
+               <span class="nn">Path</span><span class="p">.</span><span class="n">with_open_out</span> <span class="o">~</span><span class="n">create</span><span class="o">:</span><span class="p">(</span><span class="nt">`Exclusive</span> <span class="n">stat</span><span class="o">.</span><span class="n">perm</span><span class="p">)</span> <span class="n">dst_path</span> <span class="o">@@</span> <span class="k">fun</span> <span class="n">sink</span> <span class="o">-&gt;</span>
+               <span class="nn">Flow</span><span class="p">.</span><span class="n">copy</span> <span class="n">source</span> <span class="n">sink</span><span class="p">;</span>
+               <span class="nn">Semaphore</span><span class="p">.</span><span class="n">release</span> <span class="n">sem</span>
+             <span class="p">)</span>
+         <span class="o">|</span> <span class="n">_</span> <span class="o">-&gt;</span> <span class="n">failwith</span> <span class="s2">"Not sure how to handle kind"</span><span class="p">);</span>
+        <span class="k">end</span>
+
+  <span class="k">done</span>
+</code></pre></div></div>
+
+<h2 id="results">Results</h2>
+
+<h3 id="benchmark-1">Benchmark 1</h3>
+
+<p><code class="language-plaintext highlighter-rouge">eio_cp</code> against system <code class="language-plaintext highlighter-rouge">cp -r</code> with and without “fsync + cold cache”</p>
+
+<p><img src="/assets/img/benchmark_1.png" alt="Benchmark1" /></p>
+
+<p>Our results shows what we predicted, the eio version outperforms the sequential
+one under “fsync + cold cache” configuration because it makes blocking occur
+much more often.</p>
+
+<p>Does that mean that if our workload benefits from having data in the page cache
+and/or does not need strict persistence guarantees, we should favour the
+sequential version? Well not quite. The filesystem we’ve been testing on has
+many small files, making it much more likely that data can be found in cache
+and each read/write returns quickly. Let’s see what happens when we increase
+the size of files to <strong>1 MB</strong></p>
+
+<h3 id="benchmark-2">Benchmark 2</h3>
+
+<p>Our new test directory has the following structure:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Directory depth: 5
+Files per directory: 4
+Filesize: 1MB Num files: ... Total IO size = 780MB (R) + 780MB (W)
+Num files: 780
+Total IO size = 780MB (R) + 780MB (W) = 1560MB
+</code></pre></div></div>
+<p><img src="/assets/img/benchmark_2.png" alt="Benchmark2" /></p>
+
+<p>Two things jump out at me. The first is that we’re noticing some
+incredibly fast speeds, way above our expectations! The second is that we
+are still behind the sequential version.</p>
+
+<p>Initially I was puzzled by this result thinking that it was a bug in the
+benchmark suite. After looking over it several times, I finally figured
+out that it was because the workload change had rendered our theoretical
+expectations entirely inaccurate. Reconsidering our workload, copying many
+small files versus a few large is procedurally just much more stressful
+for disks even if the total size of IO is the same. In the small files
+case, the program has to do many iterations of opening, reading, writing.
+Hence, this pattern is synonymous with the random mixed read write speed
+we looked up earlier and is also the worst case scenario when it comes to
+disk performance. On the flip side, by increasing the size of the files,
+we’ve now altered this relationship to dealing with a much bigger block of
+sequential reads and writes. Updating our expectations we rerun the fio
+benchmark but now using a larger block size (The default previously was
+4096).</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  fio --name=expect_upd_fsync+cold --rw=rw --size=1Gb --blocksize=1mi
+  --end_fsync=1 --invalidate=1
+</code></pre></div></div>
+
+<p><img src="/assets/img/fio_rw_fsync+cold.png" alt="fio_rw_fsync+cold" /></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  fio --name=expect_upd --rw=rw --size=1GB --blocksize=1mi --pre_read=1
+</code></pre></div></div>
+
+<p><img src="/assets/img/fio_rw.png" alt="fio_rw" /></p>
+
+<p>That now seems to make sense but we haven’t figured out why the concurrent
+version still lags behind the sequential one. <code class="language-plaintext highlighter-rouge">eio</code> provides a useful
+tracer <code class="language-plaintext highlighter-rouge">eio-trace</code> to visualize how fibers are interleaving in the
+program. The trace produces</p>
+
+<p><img src="/assets/img/eio-trace.png" alt="eio-trace" /></p>
+
+<p>Hah! It looks like for every copy, there’s a long read/write loop.
+Internally, eio uses 4096 Bytes as the default buffer size to copy between
+files. This explains why copying a large file requires so many reads and
+writes. Thankfully, the <code class="language-plaintext highlighter-rouge">Eio_linux.run</code> main function provides us an
+option to configure this.</p>
+
+<div class="language-ocaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">val</span> <span class="n">run</span> <span class="o">:</span>
+  <span class="o">?</span><span class="n">queue_depth</span><span class="o">:</span><span class="kt">int</span> <span class="o">-&gt;</span>
+  <span class="o">?</span><span class="n">n_blocks</span><span class="o">:</span><span class="kt">int</span> <span class="o">-&gt;</span>
+  <span class="o">?</span><span class="n">block_size</span><span class="o">:</span><span class="kt">int</span> <span class="o">-&gt;</span>
+  <span class="o">?</span><span class="n">polling_timeout</span><span class="o">:</span><span class="kt">int</span> <span class="o">-&gt;</span>
+  <span class="o">?</span><span class="n">fallback</span><span class="o">:</span><span class="p">([</span><span class="nt">`Msg</span> <span class="k">of</span> <span class="kt">string</span><span class="p">]</span> <span class="o">-&gt;</span> <span class="k">'</span><span class="n">a</span><span class="p">)</span> <span class="o">-&gt;</span>
+  <span class="p">(</span><span class="n">stdenv</span> <span class="o">-&gt;</span> <span class="k">'</span><span class="n">a</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="k">'</span><span class="n">a</span>
+</code></pre></div></div>
+
+<p>The main one of interest is <code class="language-plaintext highlighter-rouge">?block_size</code>. Let’s graph the difference in
+performance by varying the blocksize to see the effect.</p>
+
+<h3 id="benchmark-3">Benchmark 3</h3>
+<p><img src="/assets/img/benchmark_3.png" alt="Benchmark3" /></p>
+
+<p>Now that is a pretty substantial performance improvement! All with just
+one tweak, though it took some real understanding to get here. So it’s not
+always the case that the sequential version will fare better under
+<code class="language-plaintext highlighter-rouge">fsync+cold</code> conditions.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>That’s it! I hope that by stepping through this process, it has provided
+some useful context to help you think about adding concurrency for your
+filesystem workloads. Just remember that even if there are obvious
+opportunities to add concurrency, it’s not always going to provide you
+strict speedup. In all likelihood your OS is already doing something
+smart. Though having certain requirements or workloads could quickly tip
+the scales in favour of a concurrent approach.</p>
+
+    </div><a class="u-url" href="/2024/07/29/efficient-concurrency-through-eio.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+    <data class="u-url" href="/"></data>
+
+    <div class="wrapper">
+
+        <!-- <h2 class="footer-heading">(core dumped)</h2> -->
+
+        <div class="footer-col-wrapper">
+            <div class="footer-col footer-col-1">
+                <ul class="contact-list">
+                    <li class="p-name">Koon Wen Lee</li><li><a class="u-email" href="mailto:%6B%6F%6F%6E%77%65%6E@%67%6D%61%69%6C.%63%6F%6D">koonwen@gmail.com</a></li></ul>
+            </div>
+
+            <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/koonwen"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">koonwen</span></a></li><li><a href="https://www.linkedin.com/in/koonwen-lee-b349b1175"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#linkedin"></use></svg> <span class="username">koonwen-lee-b349b1175</span></a></li><li><a href="https://www.twitter.com/koonwen"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">koonwen</span></a></li><li><a href="/feed.xml"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#rss"></use></svg> <span>rss</span></a></li></ul>
+</div>
+
+            <div class="footer-col footer-col-3">
+                <p>Portfolio and Blog
+</p>
+            </div>
+        </div>
+
+    </div>
+
+</footer>
+</body>
+
+</html>

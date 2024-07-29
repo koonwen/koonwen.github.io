@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Breaking down Dynamic-Programming | (core dumped)</title>
+<meta name="generator" content="Jekyll v3.9.5" />
+<meta property="og:title" content="Breaking down Dynamic-Programming" />
+<meta name="author" content="Koon Wen Lee" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Dynamic-Programming (DP) is one of those things that makes my brain overheat. To a first approximation, DP is an algorithmic trick that improves the time complexity of otherwise exponential algorithms. DP manages this because it avoids doing unnecessary re-computation - A common feature that causes problems to grow exponentially. Instead of re-computing something we’ve already done before, DP says “let’s store this result because I’ll have to refer back to it”. Sound simple? In practice, not so much. This post tries to provide a clear step by step to approach such problems." />
+<meta property="og:description" content="Dynamic-Programming (DP) is one of those things that makes my brain overheat. To a first approximation, DP is an algorithmic trick that improves the time complexity of otherwise exponential algorithms. DP manages this because it avoids doing unnecessary re-computation - A common feature that causes problems to grow exponentially. Instead of re-computing something we’ve already done before, DP says “let’s store this result because I’ll have to refer back to it”. Sound simple? In practice, not so much. This post tries to provide a clear step by step to approach such problems." />
+<link rel="canonical" href="https://koonwen.github.io/2024/01/15/breaking-down-dynamic-programming.html" />
+<meta property="og:url" content="https://koonwen.github.io/2024/01/15/breaking-down-dynamic-programming.html" />
+<meta property="og:site_name" content="(core dumped)" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-01-15T15:22:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Breaking down Dynamic-Programming" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Koon Wen Lee"},"dateModified":"2024-01-15T15:22:00+00:00","datePublished":"2024-01-15T15:22:00+00:00","description":"Dynamic-Programming (DP) is one of those things that makes my brain overheat. To a first approximation, DP is an algorithmic trick that improves the time complexity of otherwise exponential algorithms. DP manages this because it avoids doing unnecessary re-computation - A common feature that causes problems to grow exponentially. Instead of re-computing something we’ve already done before, DP says “let’s store this result because I’ll have to refer back to it”. Sound simple? In practice, not so much. This post tries to provide a clear step by step to approach such problems.","headline":"Breaking down Dynamic-Programming","mainEntityOfPage":{"@type":"WebPage","@id":"https://koonwen.github.io/2024/01/15/breaking-down-dynamic-programming.html"},"url":"https://koonwen.github.io/2024/01/15/breaking-down-dynamic-programming.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="https://koonwen.github.io/feed.xml" title="(core dumped)" /><script>
+if(!(window.doNotTrack === "1" || navigator.doNotTrack === "1" || navigator.doNotTrack === "yes" || navigator.msDoNotTrack === "1")) {
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-NNNNNNNN-N', 'auto');
+  ga('send', 'pageview');
+}
+</script>
+  
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">(core dumped)</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/blog">Blog</a><a class="page-link" href="/projects">Projects</a><a class="page-link" href="/resume">Resume</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+    <header class="post-header">
+        <h1 class="post-title p-name" itemprop="name headline">Breaking down Dynamic-Programming</h1>
+        <p class="post-meta">
+            <time class="dt-published" datetime="2024-01-15T15:22:00+00:00" itemprop="datePublished">Jan 15, 2024
+            </time></p>
+    </header>
+
+    
+    <img class="img-fluid" src="/assets/img/greedy-cover.jpg" alt="Cover photo">
+    
+
+    <div class="post-content e-content" itemprop="articleBody">
+        <h5>Pre-requisite knowledge assumed: <strong> Python </strong></h5>
+        <h1> — </h1>
+	<ul id="toc" class="toc__list">
+<li class="toc-entry toc-h2"><a href="#when-does-dp-apply">When does DP apply?</a></li>
+<li class="toc-entry toc-h2"><a href="#a-problem">A Problem</a>
+<ul class="toc__sublist">
+<li class="toc-entry toc-h3"><a href="#naive-solution">Naive solution</a></li>
+<li class="toc-entry toc-h3"><a href="#looking-top-down">Looking Top-down</a></li>
+<li class="toc-entry toc-h3"><a href="#from-bottom-up">From Bottom-up</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#a-harder-problem">A Harder Problem</a></li>
+<li class="toc-entry toc-h2"><a href="#conclusion">Conclusion</a></li>
+</ul>
+        <p>Dynamic-Programming (DP) is one of those things that makes my brain
+overheat. To a first approximation, DP is an algorithmic trick that
+improves the time complexity of otherwise exponential algorithms. DP
+manages this because it avoids doing unnecessary re-computation - A
+common feature that causes problems to grow exponentially. Instead
+of re-computing something we’ve already done before, DP says “let’s
+store this result because I’ll have to refer back to it”.  Sound
+simple? In practice, not so much. This post tries to provide a clear
+step by step to approach such problems.</p>
+
+<h2 id="when-does-dp-apply">When does DP apply?</h2>
+<p>The first thing that makes DP challenging is that it’s not clear when
+it applies. I believe there’s no simple way to figure it out
+either. So far, I use some heuristics like thinking about if the
+problem asks for “an optimal combination”. This usually means that the
+brute force solution would have you calculate <em>all possibilities</em> to
+find the best one. This is the dead giveaway that your algorithm
+diverges. That said, sometimes problems that seem like DP could
+actually just by a simple Greedy algorithm, so it’s worth trying that
+approach first before committing to DP.</p>
+
+<h2 id="a-problem">A Problem</h2>
+<p>Calculate the i-th term Fibonacci sequence</p>
+<pre><code class="language-math">Fib(n) = Fib(n-1) + Fib(n-2)
+</code></pre>
+
+<h3 id="naive-solution">Naive solution</h3>
+<p>This is pretty much in your face exponential because of the recursive
+definition. Implementing it recursively is basically brute force and
+would yield exponential time complexity</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="k">def</span> <span class="nf">fib</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">fib</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">fib</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span></code></pre></figure>
+
+<h3 id="looking-top-down">Looking Top-down</h3>
+<p>The problem with our recursive solution is that we have a lot of
+branching and incur many repeated sub-computation.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>              fib(4)
+             /      \
+        fib(3)       fib(2)
+        /   \        /    \
+    fib(2)  fib(1) fib(1) fib(0)
+    /    \
+fib(1)  fib(0)
+
+We can see that *fib(2)* is repeated 2 times and fib(1) and
+fib(0), 3 and 2 times respectively.
+</code></pre></div></div>
+
+<p>One way to visualize your algorithm is to think if the evaluation
+expands into a N-branch tree. In that case, you can start think if you
+can leverage <strong>Memoization</strong>. Memoization is the one of two DP
+approaches. As per the name, here the memo is where we are going to
+save the result of some sub-computation and lookup later when we need
+it. How we’ll do this is to add a table lookup just before we descend
+into the recursion and make sure to save the results into the table
+when we get them.</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="n">memo</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+<span class="k">def</span> <span class="nf">fib</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">memo</span><span class="p">:</span> <span class="k">return</span> <span class="n">memo</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">fib</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">fib</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">memo</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span>
+        <span class="k">return</span> <span class="n">res</span></code></pre></figure>
+
+<p>If you can’t yet tell, this basically causes the recursion to
+short-circuit because it can find the previously computed results in
+the table. Our runtime is significantly better since we only really
+descend down the left side of the tree and every subsequent right
+child’s result cost a single constant lookup. Something to note about
+the time complexity is that this is O(n), not O(log(n)). You might be
+quick to assume that because of the tree I drew but actually we
+descend n times down the left side, so we haven’t split the problem in
+half.</p>
+
+<blockquote>
+  <p>We call this a top-down approach because the recursive call begins
+at the top and bottoms out at the base case and builds back up the
+result.</p>
+</blockquote>
+
+<h3 id="from-bottom-up">From Bottom-up</h3>
+<p>The second technique DP technique is called <strong>Tabulation</strong>. With this
+method, we skip the recursion downward and just start directly from
+the base case and build the result up. We also use a table to keep
+track and reference our previous results. Our Fibonacci problem is not
+the most motivating case for a table (explained later) but I will
+demonstrate it anyway. For intuition, instead of trying to calculate
+our results from the top, notice that working from the bottom pretty
+easy. That is, we can find fib(2) easily because it is fib(1) + fib(0)
+which we know to be 1 + 1 effectively. Then fib(3) is fib(2) + fib(1)
+and we just calculated the result of fib(2), and so forth.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">fib</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+    <span class="n">tbl</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">n</span>
+    <span class="n">tbl</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">tbl</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="n">tbl</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">tbl</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">tbl</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">tbl</span><span class="p">[</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+</code></pre></div></div>
+
+<p>In this implementation, we iteratively calculate up toward the value
+that we want using the result of previous calculated
+result. Leveraging the same idea used in memoization, just in a
+different style.</p>
+
+<blockquote>
+  <p>This is bottom-up because we start directly from the base case. An
+interesting note is that memoization usually involves recursion and
+tabulation uses simple iteration so it is generally faster because
+it doesn’t need to allocate stack frames for the recursive function
+calls.</p>
+</blockquote>
+
+<h2 id="a-harder-problem">A Harder Problem</h2>
+<p>As alluded to, using tabulation for the Fibonnacci problem is
+unnecessary here because we only really need to keep track of one
+variable to calculate the subsequent result. Tabulation shines when
+there are multiple “choices” to be made. Let’s see an example:</p>
+
+<p>“The assembly-line problem: Given 2 assembly lines, each with M
+stations where M is some given integer value representing the time
+taken at the station. Determine the shortest path that can be taken
+through the factory if there is also a cost to transferring between
+assembly lines”</p>
+
+<div class="language-text highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Line1: 5 -&gt; 2  -&gt; 10 -&gt; 7
+Line2: 1 -&gt; 12 -&gt; 1  -&gt; 1
+
+Line1 to Line2 transfer cost: [2, 1,  5]
+Line2 to Line1 transfer cost: [1, 12, 15]
+
+The optimal solution is the following:
+Line1:    5    2   10   7
+             /   \
+         +1 /     \ +1
+           /       \
+Line2: -&gt; 1    12    1 -&gt; 1  =&gt; 1 + 1 + 2 + 1 + 1 + 1 = 7
+</code></pre></div></div>
+
+<p>It’s worth looking first what the recursive solution might look like</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">path</span><span class="p">(</span><span class="n">l1</span><span class="p">,</span> <span class="n">l2</span><span class="p">,</span> <span class="n">l1_l2</span><span class="p">,</span> <span class="n">l2_l1</span><span class="p">):</span>
+    <span class="n">length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">l1</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">aux</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">line_other</span><span class="p">,</span> <span class="n">switch</span><span class="p">,</span> <span class="n">switch_other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">line</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">i</span> <span class="o">==</span> <span class="n">length</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">aux</span><span class="p">(</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">l1</span><span class="p">,</span> <span class="n">l2</span><span class="p">,</span> <span class="n">l2_l1</span><span class="p">,</span> <span class="n">l1_l2</span><span class="p">),</span> <span class="n">aux</span><span class="p">(</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">l2</span><span class="p">,</span> <span class="n">l1</span><span class="p">,</span> <span class="n">l1_l2</span><span class="p">,</span> <span class="n">l2_l1</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">stay</span> <span class="o">=</span> <span class="n">aux</span><span class="p">(</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">line_other</span><span class="p">,</span> <span class="n">switch</span><span class="p">,</span> <span class="n">switch_other</span><span class="p">)</span>
+            <span class="n">switch</span> <span class="o">=</span> <span class="n">aux</span><span class="p">(</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">line_other</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">switch_other</span><span class="p">,</span> <span class="n">switch</span><span class="p">)</span> <span class="o">+</span> <span class="n">switch</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">stay</span><span class="p">,</span> <span class="n">switch</span><span class="p">)</span> <span class="o">+</span> <span class="n">line</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">aux</span><span class="p">(</span><span class="n">length</span><span class="p">,</span> <span class="n">l1</span><span class="p">,</span> <span class="n">l2</span><span class="p">,</span> <span class="n">l2_l1</span><span class="p">,</span> <span class="n">l1_l2</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>As you can see, we have to keep track of multiple variables in our
+<code class="language-plaintext highlighter-rouge">aux</code> recursive function which makes the code rather clunky. Adding in
+memoization would just make it even more complex. Now look at the
+tabulation solution</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">path_tab</span><span class="p">(</span><span class="n">l1</span><span class="p">,</span> <span class="n">l2</span><span class="p">,</span> <span class="n">l1_l2</span><span class="p">,</span> <span class="n">l2_l1</span><span class="p">):</span>
+    <span class="n">length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">l1</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">length</span><span class="p">):</span>
+        <span class="n">l1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="nb">min</span><span class="p">(</span><span class="n">l1</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">l2</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">l2_l1</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">l2</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="nb">min</span><span class="p">(</span><span class="n">l2</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">l1</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">l1_l2</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">l1</span><span class="p">[</span><span class="n">length</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">l2</span><span class="p">[</span><span class="n">length</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+</code></pre></div></div>
+
+<p>The iterative solution to my mind is much easier to follow what is
+going and also overall cleaner. Unlike the recursive solution, we
+don’t have to pass on variables to the next recursive call.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+<p>This sums up the introduction to Dynamic programming, why it works,
+when it applies and the trade-off between the two main techniques.</p>
+
+<blockquote>
+  <p>When you see branching with similar looking sub-branches, it’s
+probably going to need DP.</p>
+</blockquote>
+
+    </div><a class="u-url" href="/2024/01/15/breaking-down-dynamic-programming.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+    <data class="u-url" href="/"></data>
+
+    <div class="wrapper">
+
+        <!-- <h2 class="footer-heading">(core dumped)</h2> -->
+
+        <div class="footer-col-wrapper">
+            <div class="footer-col footer-col-1">
+                <ul class="contact-list">
+                    <li class="p-name">Koon Wen Lee</li><li><a class="u-email" href="mailto:%6B%6F%6F%6E%77%65%6E@%67%6D%61%69%6C.%63%6F%6D">koonwen@gmail.com</a></li></ul>
+            </div>
+
+            <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/koonwen"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">koonwen</span></a></li><li><a href="https://www.linkedin.com/in/koonwen-lee-b349b1175"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#linkedin"></use></svg> <span class="username">koonwen-lee-b349b1175</span></a></li><li><a href="https://www.twitter.com/koonwen"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">koonwen</span></a></li><li><a href="/feed.xml"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#rss"></use></svg> <span>rss</span></a></li></ul>
+</div>
+
+            <div class="footer-col footer-col-3">
+                <p>Portfolio and Blog
+</p>
+            </div>
+        </div>
+
+    </div>
+
+</footer>
+</body>
+
+</html>

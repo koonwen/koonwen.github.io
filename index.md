@@ -13,20 +13,21 @@ Statistical Science (Focus in Computer Science). I wrote my research
 thesis [*Concurrent Structures and Effect Handlers: A Batch made in
 Heaven*](/assets/pdf/Koon-Wen-Lee-Capstone.pdf) under [Dr Ilya
 Sergey](https://ilyasergey.net/) which has been extended and published
-to [*SPLASH
-2024*](https://2024.splashcon.org/details/splash-2024-oopsla/118/Concurrent-Data-Structures-Made-Easy)
-I also participated in the [Pembroke International Exchange Programme
-Fall 2023](https://www.pem.cam.ac.uk/international-programmes),
-studying Mathematics and Linguistics at the [**University of
+to *SPLASH 2024* as [*Concurrent Data Structures Made
+Easy*](/assets/pdf/concurrent-structures-made-easy). I've also
+participated in the [Pembroke International Exchange Programme Fall
+2023](https://www.pem.cam.ac.uk/international-programmes), studying
+Mathematics and Linguistics at the [**University of
 Cambridge**](https://www.cam.ac.uk/)
 
-I have worked previously at [**Ahrefs**](https://ahrefs.com/),
+I currently work at [**Ahrefs**](https://ahrefs.com/) as a mid-end
+developer. Previously I was a software engineering intern with
 [**Tarides**](https://tarides.com/),
 [**Bytedance**](https://www.bytedance.com/en/) and
-[**Thryft**](https://thryft.asia/) as a software engineering
-intern. During which, I have worked on projects varying from building
-high-level application services, open-source libraries/tooling and
-software that interacts with low-level embedded systems.
+[**Thryft**](https://thryft.asia/). During which, I have worked on
+projects varying from building high-level application services,
+open-source libraries/tooling and software that interacts with
+low-level embedded systems.
 
 I am based in **Singapore** but have studied in the **UK** and worked
 previously in **France** and **Japan**. I presented a talk on [Porting
@@ -35,7 +36,7 @@ Mirage onto RIOT](https://www.youtube.com/watch?v=xeejZO7A9Lw) at the
 **Germany**.
 
 When I have time, I try to contribute to the OCaml ecosystem by
-working on open source projects. Currently, I am writing
+working on open source projects. I wrote
 [obatcher](https://github.com/koonwen/obatcher/) library based on my
 thesis. I also maintain
 [uring-trace](https://github.com/ocaml-multicore/uring-trace/) and

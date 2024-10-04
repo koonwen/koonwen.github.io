@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Continuation-Passing-Style for the pragmatic layman | (core dumped)</title>
+<meta name="generator" content="Jekyll v3.9.5" />
+<meta property="og:title" content="Continuation-Passing-Style for the pragmatic layman" />
+<meta name="author" content="Koon Wen Lee" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="I’ve always found continuation-passing-style (CPS) one of the more an elusive concept to grasp. Today I came across a simple tree traversal problem that helped me work through some of that complexity." />
+<meta property="og:description" content="I’ve always found continuation-passing-style (CPS) one of the more an elusive concept to grasp. Today I came across a simple tree traversal problem that helped me work through some of that complexity." />
+<link rel="canonical" href="https://koonwen.github.io/2024/01/07/continuation-passing-style-for-the-pragmatic-layman.html" />
+<meta property="og:url" content="https://koonwen.github.io/2024/01/07/continuation-passing-style-for-the-pragmatic-layman.html" />
+<meta property="og:site_name" content="(core dumped)" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-01-07T08:47:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Continuation-Passing-Style for the pragmatic layman" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Koon Wen Lee"},"dateModified":"2024-01-07T08:47:00+00:00","datePublished":"2024-01-07T08:47:00+00:00","description":"I’ve always found continuation-passing-style (CPS) one of the more an elusive concept to grasp. Today I came across a simple tree traversal problem that helped me work through some of that complexity.","headline":"Continuation-Passing-Style for the pragmatic layman","mainEntityOfPage":{"@type":"WebPage","@id":"https://koonwen.github.io/2024/01/07/continuation-passing-style-for-the-pragmatic-layman.html"},"url":"https://koonwen.github.io/2024/01/07/continuation-passing-style-for-the-pragmatic-layman.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="https://koonwen.github.io/feed.xml" title="(core dumped)" /><script>
+if(!(window.doNotTrack === "1" || navigator.doNotTrack === "1" || navigator.doNotTrack === "yes" || navigator.msDoNotTrack === "1")) {
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-NNNNNNNN-N', 'auto');
+  ga('send', 'pageview');
+}
+</script>
+  
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">(core dumped)</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/blog">Blog</a><a class="page-link" href="/projects">Projects</a><a class="page-link" href="/resume">Resume</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+    <header class="post-header">
+        <h1 class="post-title p-name" itemprop="name headline">Continuation-Passing-Style for the pragmatic layman</h1>
+        <p class="post-meta">
+            <time class="dt-published" datetime="2024-01-07T08:47:00+00:00" itemprop="datePublished">Jan 7, 2024
+            </time></p>
+    </header>
+
+    
+    <img class="img-fluid" src="/assets/img/cps-cover.jpg" alt="Cover photo">
+    
+
+    <div class="post-content e-content" itemprop="articleBody">
+        <h5>Pre-requisite knowledge assumed: <strong> OCaml | Tail-recursion </strong></h5>
+        <h1> — </h1>
+	<ul id="toc" class="toc__list">
+<li class="toc-entry toc-h2"><a href="#the-problem">The Problem</a>
+<ul class="toc__sublist">
+<li class="toc-entry toc-h3"><a href="#solution-1-classic-recursion">Solution 1: Classic recursion</a></li>
+<li class="toc-entry toc-h3"><a href="#solution-2-cps-transformation">Solution 2: CPS transformation</a></li>
+<li class="toc-entry toc-h3"><a href="#solution-3-short-circuiting-cps">Solution 3: Short-circuiting CPS</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#benchmarks">Benchmarks</a></li>
+</ul>
+        <p>I’ve always found continuation-passing-style (CPS) one of the more an
+elusive concept to grasp. Today I came across a simple tree traversal
+problem that helped me work through some of that complexity.</p>
+
+<h2 id="the-problem">The Problem</h2>
+<p>Suppose you are given an integer value <code class="language-plaintext highlighter-rouge">target</code> and a binary tree
+whereby each node has a integer value assigned to it. Identify if a
+path exists from the root to leaf whereby the total sum of the path
+equates to <code class="language-plaintext highlighter-rouge">target</code>.</p>
+
+<h3 id="solution-1-classic-recursion">Solution 1: Classic recursion</h3>
+<p>At first glance, this question can be solved with the classic
+recursive approach. That is, we recursively traverse down the tree
+until we hit a leaf node as our base case. Along the way, we subtract
+the value of the current node from the <code class="language-plaintext highlighter-rouge">target</code> and pass on the
+difference. In the base case, we now have the result whether the sum
+of the path is equal to the <code class="language-plaintext highlighter-rouge">target</code> and we will need to bubble up the
+result. In OCaml, we would have something like</p>
+
+<figure class="highlight"><pre><code class="language-ocaml" data-lang="ocaml"><span class="k">type</span> <span class="k">'</span><span class="n">a</span> <span class="n">node</span> <span class="o">=</span>
+  <span class="o">|</span> <span class="nc">Lf</span>
+  <span class="o">|</span> <span class="nc">Br</span> <span class="k">of</span> <span class="k">'</span><span class="n">a</span> <span class="o">*</span> <span class="k">'</span><span class="n">a</span> <span class="n">node</span> <span class="o">*</span> <span class="k">'</span><span class="n">a</span> <span class="n">node</span>
+
+<span class="k">let</span> <span class="k">rec</span> <span class="n">find_path</span> <span class="n">node</span> <span class="n">target</span> <span class="o">=</span>
+  <span class="k">match</span> <span class="n">node</span> <span class="k">with</span>
+  <span class="o">|</span> <span class="nc">Lf</span> <span class="o">-&gt;</span> <span class="n">target</span> <span class="o">=</span> <span class="mi">0</span>
+  <span class="o">|</span> <span class="nc">Br</span> <span class="p">(</span><span class="n">v</span><span class="o">,</span> <span class="n">l</span><span class="o">,</span> <span class="n">r</span><span class="p">)</span> <span class="o">-&gt;</span>
+      <span class="k">let</span> <span class="n">lv</span> <span class="o">=</span> <span class="n">find_path</span> <span class="n">l</span> <span class="p">(</span><span class="n">target</span> <span class="o">-</span> <span class="n">v</span><span class="p">)</span> <span class="k">in</span>
+      <span class="k">let</span> <span class="n">rv</span> <span class="o">=</span> <span class="n">find_path</span> <span class="n">r</span> <span class="p">(</span><span class="n">target</span> <span class="o">-</span> <span class="n">v</span><span class="p">)</span> <span class="k">in</span>
+      <span class="n">lv</span> <span class="o">||</span> <span class="n">rv</span></code></pre></figure>
+
+<p>This works, but it’s very memory intensive. The recursive calls blow
+up the stack with a lot of pending function frames. Can we do better?
+More precisely, can we make this function tail-recursive?</p>
+
+<p>Not all functions are created equal. Some happen to be easier to be
+converted their tail-recursive counterparts. Unfortunately,
+<code class="language-plaintext highlighter-rouge">find_path</code> is one of those difficult functions. The reasons why this
+is the case currently escapes me and will be tackled in a later
+post. For now, let’s assume that to be the case. (Or you can try
+to come up with the tail-recursive solution yourself)</p>
+
+<h3 id="solution-2-cps-transformation">Solution 2: CPS transformation</h3>
+<p>Turns out, the way to convert such a function to a tail-recursive
+version is to leverage the idea of <em>continuations</em>. There’s a lot of
+technical literature on the topic obfuscating what the term refers
+to. To my mind, it just means “what is next thing to do”. In other
+words, if you ran a program and paused it at some arbitrary point
+(think a debugger), what’s left to do is the continuation of that
+program. So continuation-passing-style, is a way of programming where
+we explicitly pass functions “the next thing to do”. What does that
+look like in code? Instead of functions returning values to the
+caller, we can design functions that return with a new function call.</p>
+
+<figure class="highlight"><pre><code class="language-ocaml" data-lang="ocaml"><span class="k">let</span> <span class="n">find_path_cps</span> <span class="n">node</span> <span class="n">target</span> <span class="o">=</span>
+  <span class="k">let</span> <span class="k">rec</span> <span class="n">aux</span> <span class="n">node</span> <span class="n">target</span> <span class="n">k</span> <span class="o">=</span>
+    <span class="k">match</span> <span class="n">node</span> <span class="k">with</span>
+    <span class="o">|</span> <span class="nc">Lf</span> <span class="o">-&gt;</span> <span class="n">k</span> <span class="p">(</span><span class="mi">0</span> <span class="o">=</span> <span class="n">target</span><span class="p">)</span>
+    <span class="o">|</span> <span class="nc">Br</span> <span class="p">(</span><span class="n">v</span><span class="o">,</span> <span class="n">l</span><span class="o">,</span> <span class="n">r</span><span class="p">)</span> <span class="o">-&gt;</span>
+        <span class="n">aux</span> <span class="n">l</span> <span class="p">(</span><span class="n">target</span> <span class="o">-</span> <span class="n">v</span><span class="p">)</span> <span class="p">(</span><span class="k">fun</span> <span class="n">lv</span> <span class="o">-&gt;</span>
+            <span class="n">aux</span> <span class="n">r</span> <span class="p">(</span><span class="n">target</span> <span class="o">-</span> <span class="n">v</span><span class="p">)</span> <span class="p">(</span><span class="k">fun</span> <span class="n">rv</span> <span class="o">-&gt;</span>
+                <span class="n">k</span> <span class="p">(</span><span class="n">lv</span> <span class="o">||</span> <span class="n">rv</span><span class="p">)))</span>
+  <span class="k">in</span>
+  <span class="n">aux</span> <span class="n">node</span> <span class="n">target</span> <span class="nn">Fun</span><span class="p">.</span><span class="n">id</span></code></pre></figure>
+
+<p>This looks confusing and it is. I took some time to really process
+what exactly is going on in this function. Let’s start with the most
+obvious. Firstly our cps version defines an auxiliary function with an
+added parameter <code class="language-plaintext highlighter-rouge">k</code> that stands for continuation. This parameter can
+be thought of as a kind of accumulator that builds up the things “left
+to do” in the same way that the recursive solution builds up stack
+frames to keep track of pending computation to execute later. In CPS
+we don’t leave anything in the stack pending instead by passing the
+<em>continuation</em> represented by a function to the next recursive
+call. In such a way, our cps inspired function is now tail-recursive
+by passing around a function pointer.</p>
+
+<h3 id="solution-3-short-circuiting-cps">Solution 3: Short-circuiting CPS</h3>
+<p>Reducing memory usage is one of the main advantages of CPS but it also
+allows us to “short-circuit” functions. Specifically for the case of
+<code class="language-plaintext highlighter-rouge">find_path</code> we could design it in such a way to “forget” about what’s
+left to do and have an escape hatch that allows us to return early
+once we found a path that exists.</p>
+
+<figure class="highlight"><pre><code class="language-ocaml" data-lang="ocaml"><span class="k">let</span> <span class="n">find_path_cps_fast</span> <span class="n">node</span> <span class="n">target</span> <span class="o">=</span>
+  <span class="k">let</span> <span class="k">rec</span> <span class="n">aux</span> <span class="n">node</span> <span class="n">target</span> <span class="n">k</span> <span class="o">=</span>
+    <span class="k">match</span> <span class="n">node</span> <span class="k">with</span>
+    <span class="o">|</span> <span class="nc">Lf</span> <span class="o">-&gt;</span> <span class="n">k</span> <span class="p">(</span><span class="mi">0</span> <span class="o">=</span> <span class="n">target</span><span class="p">)</span>
+    <span class="o">|</span> <span class="nc">Br</span> <span class="p">(</span><span class="n">v</span><span class="o">,</span> <span class="n">l</span><span class="o">,</span> <span class="n">r</span><span class="p">)</span> <span class="o">-&gt;</span>
+        <span class="n">aux</span> <span class="n">l</span> <span class="p">(</span><span class="n">target</span> <span class="o">-</span> <span class="n">v</span><span class="p">)</span> <span class="p">(</span><span class="k">fun</span> <span class="n">lv</span> <span class="o">-&gt;</span>
+            <span class="n">aux</span> <span class="n">r</span> <span class="p">(</span><span class="n">target</span> <span class="o">-</span> <span class="n">v</span><span class="p">)</span> <span class="p">(</span><span class="k">fun</span> <span class="n">rv</span> <span class="o">-&gt;</span>
+                <span class="k">if</span> <span class="n">lv</span> <span class="k">then</span> <span class="bp">true</span> <span class="k">else</span> <span class="n">k</span> <span class="n">rv</span><span class="p">))</span>
+  <span class="k">in</span>
+  <span class="n">aux</span> <span class="n">node</span> <span class="n">target</span> <span class="nn">Fun</span><span class="p">.</span><span class="n">id</span></code></pre></figure>
+
+<p>In this new implementation, we insert a conditional within the
+continuation to ignore searching down the right subtree.</p>
+
+<h2 id="benchmarks">Benchmarks</h2>
+<p>Initializing a balanced binary tree of height=26 =&gt; 67108863 nodes
+with a single valid path down the left spine, we get the following
+results</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>        recursive: 13.87 WALL <span class="o">(</span>13.87 usr +  0.00 sys <span class="o">=</span> 13.87 CPU<span class="o">)</span> @  0.72/s <span class="o">(</span><span class="nv">n</span><span class="o">=</span>10<span class="o">)</span>
+              cps: 18.27 WALL <span class="o">(</span>18.27 usr +  0.00 sys <span class="o">=</span> 18.27 CPU<span class="o">)</span> @  0.55/s <span class="o">(</span><span class="nv">n</span><span class="o">=</span>10<span class="o">)</span>
+cps short circuit:  0.00 WALL <span class="o">(</span> 0.00 usr +  0.00 sys <span class="o">=</span>  0.00 CPU<span class="o">)</span> @ 3333333.34/s <span class="o">(</span><span class="nv">n</span><span class="o">=</span>10<span class="o">)</span>
+</code></pre></div></div>
+
+<p>Clearly, the test case is skewed to show the best performance of the
+<code class="language-plaintext highlighter-rouge">cps short circuiting</code> function. If the valid path was down the right
+of the tree, we would get similarly bad performance as the <code class="language-plaintext highlighter-rouge">cps</code>
+implementation. What’s interesting is perhaps the bad performance of
+our <code class="language-plaintext highlighter-rouge">cps</code> implementation. My guess is that whilst we are saving on
+stack memory, we have moved the recursion into heap memory by
+allocating pointers onto the heap which is invariably slower.</p>
+
+<p>This finding motivated me to dig into seeing when we actually benefit
+from writing stack-saving cps functions. For this particular case, our
+recursive call depth is limited by the height of the tree which is
+pretty shallow, not nearly big enough to burst the stack. This means
+that one needs to consider the actual depth of the recursive calls and
+whether they realistically place any stress on the stack. A traversal
+over a list is perhaps a more motivating case for a CPS transformation
+than our tree here. In fact, I ended up running out of memory just by
+the allocation of the tree alone. To which we come to the second
+interesting observation, you need to consider that your CPS function
+will be competing with your data structure (if any) for resources on
+the heap. For most user programs, we don’t usually get that kind of
+scale for data structures anyway. It usually makes sense to opt for
+the simpler recursive solution.</p>
+
+<p>(In utop and OCaml bytecode programs, the stack limit is 1024k words
+whilst natively compiled programs depend on the system limits which
+is 8192 in my case)</p>
+
+<blockquote>
+  <p>Food for thought: Continuations are an abstraction of the program stack</p>
+</blockquote>
+
+    </div><a class="u-url" href="/2024/01/07/continuation-passing-style-for-the-pragmatic-layman.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+    <data class="u-url" href="/"></data>
+
+    <div class="wrapper">
+
+        <!-- <h2 class="footer-heading">(core dumped)</h2> -->
+
+        <div class="footer-col-wrapper">
+            <div class="footer-col footer-col-1">
+                <ul class="contact-list">
+                    <li class="p-name">Koon Wen Lee</li><li><a class="u-email" href="mailto:%6B%6F%6F%6E%77%65%6E@%67%6D%61%69%6C.%63%6F%6D">koonwen@gmail.com</a></li></ul>
+            </div>
+
+            <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/koonwen"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">koonwen</span></a></li><li><a href="https://www.linkedin.com/in/koonwen-lee-b349b1175"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#linkedin"></use></svg> <span class="username">koonwen-lee-b349b1175</span></a></li><li><a href="https://www.twitter.com/koonwen"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">koonwen</span></a></li><li><a href="/feed.xml"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#rss"></use></svg> <span>rss</span></a></li></ul>
+</div>
+
+            <div class="footer-col footer-col-3">
+                <p>Portfolio and Blog
+</p>
+            </div>
+        </div>
+
+    </div>
+
+</footer>
+</body>
+
+</html>

@@ -14,7 +14,7 @@ thesis [*Concurrent Structures and Effect Handlers: A Batch made in
 Heaven*](/assets/pdf/Koon-Wen-Lee-Capstone.pdf) under [Dr Ilya
 Sergey](https://ilyasergey.net/) which has been extended and published
 to *SPLASH 2024* as [*Concurrent Data Structures Made
-Easy*](/assets/pdf/concurrent-structures-made-easy). I've also
+Easy*](/assets/pdf/concurrent-structures-made-easy.pdf). I've also
 participated in the [Pembroke International Exchange Programme Fall
 2023](https://www.pem.cam.ac.uk/international-programmes), studying
 Mathematics and Linguistics at the [**University of

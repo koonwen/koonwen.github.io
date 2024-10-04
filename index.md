@@ -13,7 +13,9 @@ Statistical Science (Focus in Computer Science). I wrote my research
 thesis [*Concurrent Structures and Effect Handlers: A Batch made in
 Heaven*](/assets/pdf/Koon-Wen-Lee-Capstone.pdf) under [Dr Ilya
 Sergey](https://ilyasergey.net/) which has been extended and published
-to *SPLASH 2024* as [*Concurrent Data Structures Made
+to [*OOPSLA
+2024*](https://2024.splashcon.org/details/splash-2024-oopsla/118/Concurrent-Data-Structures-Made-Easy)
+as [*Concurrent Data Structures Made
 Easy*](/assets/pdf/concurrent-structures-made-easy.pdf). I've also
 participated in the [Pembroke International Exchange Programme Fall
 2023](https://www.pem.cam.ac.uk/international-programmes), studying
